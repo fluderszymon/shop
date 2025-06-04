@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.controller;
 
+import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.service.UserService;
@@ -20,12 +21,12 @@ public class UserController {
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
+    public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{userId}")
-    public User getUserById(@PathVariable int userId) {
+    public UserDTO getUserById(@PathVariable int userId) {
         return userService.getUserById(userId);
     }
 
