@@ -29,4 +29,8 @@ public class User {
     @Column(name="role", nullable = false)
     private String role;
 
+    @OneToOne
+    @JoinColumn(name="cart_id")
+    private Cart cart;
+
 }
