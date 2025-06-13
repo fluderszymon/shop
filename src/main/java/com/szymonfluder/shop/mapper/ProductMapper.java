@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.mapper;
 
+import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import org.mapstruct.Mapper;
@@ -12,5 +13,8 @@ public interface ProductMapper {
 
     ProductDTO productToProductDTO(Product product);
     Product productDTOToProduct(ProductDTO productDTO);
+
+    ProductCreateDTO productToProductCreateDTO(Product product);
+    Product productCreateDTOToProduct(ProductCreateDTO productCreateDTO);
 
 }

@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.controller;
 
+import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.service.ProductService;
@@ -30,8 +31,8 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product addProduct(@RequestBody ProductDTO productDTO) {
-        return productService.addProduct(productDTO);
+    public Product addProduct(@RequestBody ProductCreateDTO productCreateDTO) {
+        return productService.addProduct(productCreateDTO);
     }
 
     @DeleteMapping("/{productId}")

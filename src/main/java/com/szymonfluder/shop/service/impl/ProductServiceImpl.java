@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.service.impl;
 
+import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.mapper.ProductMapper;
@@ -39,8 +40,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product addProduct(ProductDTO productDTO) {
-        Product product = productMapper.productDTOToProduct(productDTO);
+    public Product addProduct(ProductCreateDTO productCreateDTO) {
+        Product product = productMapper.productCreateDTOToProduct(productCreateDTO);
         return productRepository.save(product);
     }
 
