@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -32,6 +32,6 @@ public class Product {
     private int quantity;
 
     @OneToMany(mappedBy="product")
-    private ArrayList<CartItem> cartItems;
+    private List<CartItem> cartItems;
 
 }

@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.util.List;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,6 +24,6 @@ public class Cart {
     private User user;
 
     @OneToMany(mappedBy="cart")
-    private ArrayList<CartItem> cartItems;
+    private List<CartItem> cartItems;
 
 }
