@@ -24,6 +24,11 @@ public class CartItemController {
         return cartItemService.getAllCartItems();
     }
 
+    @GetMapping("/cart/{cartId}")
+    public List<CartItemDTO> getCartItemsByCartId(@PathVariable int cartId) {
+        return cartItemService.getAllCartItemsByCartId(cartId);
+    }
+
     @GetMapping("/{cartItemId}")
     public CartItemDTO getCartItemById(@PathVariable int cartItemId) {
         return cartItemService.getCartItemById(cartItemId);
