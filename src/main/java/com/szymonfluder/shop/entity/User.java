@@ -36,7 +36,7 @@ public class User {
     @Column(name="role", nullable = false)
     private String role;
 
-    @OneToOne(mappedBy="user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy="user")
     private Cart cart;
 
 }

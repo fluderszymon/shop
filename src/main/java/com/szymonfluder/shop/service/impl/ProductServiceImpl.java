@@ -66,6 +66,6 @@ public class ProductServiceImpl implements ProductService {
 
     public boolean isEnough(int productId, int orderedQuantity) {
         ProductDTO productDTO = getProductById(productId);
-        return productDTO.getQuantity() >= orderedQuantity;
+        return productDTO.getStock() >= orderedQuantity;
     }
 }
