@@ -14,4 +14,6 @@ public interface ProductService {
     void deleteProductById(int productId);
     Product updateProduct(Product product);
 
+    boolean isEnough(int productId, int orderedQuantity);
+
 }

@@ -5,6 +5,7 @@ import com.szymonfluder.shop.entity.CartItem;
 import com.szymonfluder.shop.mapper.CartItemMapper;
 import com.szymonfluder.shop.repository.CartItemRepository;
 import com.szymonfluder.shop.service.CartItemService;
+import com.szymonfluder.shop.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,14 @@ public class CartItemServiceImpl implements CartItemService {
 
     private final CartItemRepository cartItemRepository;
     private final CartItemMapper cartItemMapper;
+    private final ProductService productService;
 
 
     @Autowired
-    public CartItemServiceImpl(CartItemRepository cartItemRepository, CartItemMapper cartItemMapper) {
+    public CartItemServiceImpl(CartItemRepository cartItemRepository, CartItemMapper cartItemMapper, ProductService productService) {
         this.cartItemRepository = cartItemRepository;
         this.cartItemMapper = cartItemMapper;
+        this.productService = productService;
     }
 
     @Override
@@ -45,7 +48,10 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     public CartItem addCartItem(CartItemDTO cartItemDTO) {
-        return cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
+        if (productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
+            return cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
+        }
+        return null;
     }
 
     @Override

@@ -59,8 +59,13 @@ public class ProductServiceImpl implements ProductService {
             updatedProduct.setName(product.getName());
             updatedProduct.setDescription(product.getDescription());
             updatedProduct.setPrice(product.getPrice());
-            updatedProduct.setQuantity(product.getQuantity());
+            updatedProduct.setStock(product.getStock());
         }
         return productRepository.save(updatedProduct);
+    }
+
+    public boolean isEnough(int productId, int orderedQuantity) {
+        ProductDTO productDTO = getProductById(productId);
+        return productDTO.getQuantity() >= orderedQuantity;
     }
 }

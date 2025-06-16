@@ -5,15 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Entity
 @Table(name="products")
 public class Product {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="product_id")
@@ -28,10 +25,6 @@ public class Product {
     @Column(name="price")
     private double price;
 
-    @Column(name="quantity")
-    private int quantity;
-
-    @OneToMany(mappedBy="product")
-    private List<CartItem> cartItems;
-
+    @Column(name="stock")
+    private int stock;
 }
