@@ -50,7 +50,7 @@ public class CartServiceImpl implements CartService {
 //        cartDTO.setUserId(userId);
 //        return cartRepository.save(cartMapper.CartDTOToCart(cartDTO));
         Cart cart = new Cart();
-        cart.setUser(userMapper.userDTOToUser(userService.getUserById(userId)));
+//        cart.setUser(userMapper.userDTOToUser(userService.getUserByUsername(userId)));
         return cartRepository.save(cart);
     }
 

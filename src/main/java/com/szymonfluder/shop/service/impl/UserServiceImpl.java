@@ -6,12 +6,12 @@ import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
 import com.szymonfluder.shop.service.UserService;
+import org.aspectj.lang.annotation.After;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -26,17 +26,15 @@ public class UserServiceImpl implements UserService {
     }
 
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(userMapper::userToUserDTO)
-                .collect(Collectors.toList());
+        return userRepository.findAllUserDTO();
     }
 
-    public UserDTO getUserById(int userId) {
-        User foundUser = userRepository.findById(userId).orElse(new User());
-        return userMapper.userToUserDTO(foundUser);
+    public UserDTO getUserByUsername(String username) {
+        return userRepository.findUserDTOByUsername(username);
     }
 
+    // add automatic creation of cart at user register
+    // password is visible
     public User addUser(UserRegisterDTO userRegisterDTO) {
         User user = userMapper.userRegisterDTOToUser(userRegisterDTO);
         user.setRole("USER");
@@ -47,6 +45,7 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
+    // password is visible
     public User updateUser(User user) {
         Optional<User> tempUser = userRepository.findById(user.getUserId());
         User updatedUser = new User();

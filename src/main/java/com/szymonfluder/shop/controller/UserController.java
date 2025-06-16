@@ -25,9 +25,9 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @GetMapping("/{userId}")
-    public UserDTO getUserById(@PathVariable int userId) {
-        return userService.getUserById(userId);
+    @GetMapping("/{username}")
+    public UserDTO getUserByUsername(@PathVariable String username) {
+        return userService.getUserByUsername(username);
     }
 
     @PostMapping

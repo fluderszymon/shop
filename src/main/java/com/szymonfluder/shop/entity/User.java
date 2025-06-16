@@ -30,7 +30,7 @@ public class User {
     private String role;
 
     @OneToOne(mappedBy="user")
-//    @JoinColumn(name="cart_id")
+    @JoinColumn(name="cart_id")
     private Cart cart;
 
 }
