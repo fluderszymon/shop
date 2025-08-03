@@ -33,7 +33,6 @@ public class UserServiceImpl implements UserService {
         return userRepository.findUserDTOByUsername(username);
     }
 
-    // add automatic creation of cart at user register
     // password is visible
     public User addUser(UserRegisterDTO userRegisterDTO) {
         User user = userMapper.userRegisterDTOToUser(userRegisterDTO);

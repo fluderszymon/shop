@@ -12,8 +12,8 @@ public interface CartService {
 
     List<CartDTO> getAllCarts();
     CartDTO getCartById(int cartId);
-    Cart addCart(int userId);
+    CartDTO addCart(int userId);
     void deleteCartById(int cartId);
-    Cart updateCart(CartDTO cartDTO);
+    CartDTO updateCart(CartDTO cartDTO);
 
 }

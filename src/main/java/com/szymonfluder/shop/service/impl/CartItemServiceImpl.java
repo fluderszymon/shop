@@ -8,6 +8,7 @@ import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -59,15 +60,16 @@ public class CartItemServiceImpl implements CartItemService {
         cartItemRepository.deleteById(cartItemId);
     }
 
+    @Transactional
     @Override
-    public CartItem updateCartItem(CartItem cartItem) {
-        Optional<CartItem> tempCartItem = cartItemRepository.findById(cartItem.getCartItemId());
+    public CartItem updateCartItem(CartItemDTO cartItemDTO) {
+        Optional<CartItem> tempCartItem = cartItemRepository.findById(cartItemDTO.getCartItemId());
         CartItemDTO updatedCartItemDTO = new CartItemDTO();
         if(tempCartItem.isPresent()) {
             updatedCartItemDTO.setCartItemId(tempCartItem.get().getCartItemId());
-            updatedCartItemDTO.setQuantity(tempCartItem.get().getQuantity());
-            updatedCartItemDTO.setCartId(updatedCartItemDTO.getCartId());
-            updatedCartItemDTO.setProductId(updatedCartItemDTO.getProductId());
+            updatedCartItemDTO.setQuantity(cartItemDTO.getQuantity());
+            updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
+            updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
         }
         return cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(updatedCartItemDTO));
     }
