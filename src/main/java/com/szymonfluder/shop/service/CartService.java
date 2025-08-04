@@ -16,4 +16,6 @@ public interface CartService {
     void deleteCartById(int cartId);
     CartDTO updateCart(CartDTO cartDTO);
 
+    double getCartTotal(int cartId);
+
 }

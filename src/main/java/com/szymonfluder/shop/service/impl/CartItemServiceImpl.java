@@ -38,7 +38,7 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     public List<CartItemDTO> getAllCartItemsByCartId(int cartId) {
-        return cartItemRepository.findAllCartItemsByCartItemId(cartId);
+        return cartItemRepository.findAllCartItemsByCartId(cartId);
     }
 
     @Override
@@ -48,9 +48,10 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
-    public CartItem addCartItem(CartItemDTO cartItemDTO) {
+    public CartItemDTO addCartItem(CartItemDTO cartItemDTO) {
         if (productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
-            return cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
+            CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
+            return cartItemMapper.cartItemToCartItemDTO(savedCartItem);
         }
         return null;
     }
@@ -62,7 +63,7 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Transactional
     @Override
-    public CartItem updateCartItem(CartItemDTO cartItemDTO) {
+    public CartItemDTO updateCartItem(CartItemDTO cartItemDTO) {
         Optional<CartItem> tempCartItem = cartItemRepository.findById(cartItemDTO.getCartItemId());
         CartItemDTO updatedCartItemDTO = new CartItemDTO();
         if(tempCartItem.isPresent()) {
@@ -71,6 +72,7 @@ public class CartItemServiceImpl implements CartItemService {
             updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
             updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
         }
-        return cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(updatedCartItemDTO));
+        CartItem updatedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(updatedCartItemDTO));
+        return cartItemMapper.cartItemToCartItemDTO(updatedCartItem);
     }
 }

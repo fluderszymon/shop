@@ -2,8 +2,6 @@ package com.szymonfluder.shop.controller;
 
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.entity.Cart;
-import com.szymonfluder.shop.entity.CartItem;
 import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,13 +52,18 @@ public class CartController {
         return cartItemService.getAllCartItemsByCartId(cartId);
     }
 
+    @GetMapping("/items/{cartItemId}")
+    public CartItemDTO getCartItemById(@PathVariable int cartItemId) {
+        return cartItemService.getCartItemById(cartItemId);
+    }
+
     @PostMapping("/{cartId}/items")
-    public CartItem addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
+    public CartItemDTO addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
         return cartItemService.addCartItem(cartItemDTO);
     }
 
     @PutMapping("/{cartId}/items/{itemId}")
-    public CartItem updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
+    public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
         return cartItemService.updateCartItem(cartItemDTO);
     }
 
@@ -69,4 +72,8 @@ public class CartController {
         cartItemService.deleteCartItemById(cartItemId);
     }
 
+    @GetMapping("/{cartId}/total")
+    public double getCartTotal(@PathVariable int cartId) {
+        return cartService.getCartTotal(cartId);
+    }
 }

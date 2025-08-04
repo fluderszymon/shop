@@ -1,13 +1,17 @@
 package com.szymonfluder.shop.service.impl;
 
 import com.szymonfluder.shop.dto.CartDTO;
+import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.entity.Cart;
 import com.szymonfluder.shop.mapper.CartMapper;
 import com.szymonfluder.shop.repository.CartRepository;
+import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
+import com.szymonfluder.shop.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,11 +21,16 @@ public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
     private final CartMapper cartMapper;
+    private final CartItemService cartItemService;
+    private final ProductService productService;
 
     @Autowired
-    public CartServiceImpl(CartRepository cartRepository, CartMapper cartMapper) {
+    public CartServiceImpl(CartRepository cartRepository, CartMapper cartMapper,
+                           CartItemService cartItemService, ProductService productService) {
         this.cartRepository = cartRepository;
         this.cartMapper = cartMapper;
+        this.cartItemService = cartItemService;
+        this.productService = productService;
     }
 
     @Override
@@ -61,5 +70,16 @@ public class CartServiceImpl implements CartService {
         }
         Cart updatedCart = cartRepository.save(cartMapper.CartDTOToCart(updatedCartDTO));
         return cartMapper.CartToCartDTO(updatedCart);
+    }
+
+    @Override
+    public double getCartTotal(int cartId) {
+        ArrayList<CartItemDTO> cartItemDTOs = (ArrayList<CartItemDTO>) cartItemService.getAllCartItemsByCartId(cartId);
+        double total = 0;
+        for (CartItemDTO cartItemDTO : cartItemDTOs) {
+            double productPrice = productService.getProductById(cartItemDTO.getProductId()).getPrice();
+            total =+ cartItemDTO.getQuantity() * productPrice;
+        }
+        return total;
     }
 }
