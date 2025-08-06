@@ -37,6 +37,7 @@ public class CartItemServiceImpl implements CartItemService {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public List<CartItemDTO> getAllCartItemsByCartId(int cartId) {
         return cartItemRepository.findAllCartItemsByCartId(cartId);
     }

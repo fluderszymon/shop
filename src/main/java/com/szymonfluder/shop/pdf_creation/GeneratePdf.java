@@ -12,18 +12,15 @@ import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import com.szymonfluder.shop.dto.InvoiceDTO;
+import com.szymonfluder.shop.dto.OrderItemDTO;
 
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 public class GeneratePdf {
 
-    private static final String INVOICE_FILE_PATH = "invoice.pdf";
     private static final float FULL_WIDTH = 570f;
     private static final float[] ONE_COLUMN_WIDTH = {FULL_WIDTH/2};
     private static final float[] TWO_COLUMN_WIDTH = {FULL_WIDTH/2, FULL_WIDTH/2};
@@ -36,56 +33,42 @@ public class GeneratePdf {
     private static final Border THIN_GRAY_BORDER = new SolidBorder(ColorConstants.GRAY, 0.2f);
     private static final Border DASHED_GRAY_BORDER = new DashedBorder(ColorConstants.GRAY, 0.4f);
 
-
-
-    public static void main(String[] args) {
-        try {
-            generateInvoice();
-        } catch (Exception e) {
-            System.err.println("Error generating PDF: " + e.getMessage());
-        }
-    }
-
-    public static void generateInvoice() throws FileNotFoundException {
-        PdfWriter pdfWriter = new PdfWriter(INVOICE_FILE_PATH);
+    public void generateInvoice(String filePath, InvoiceDTO invoiceDTO) throws FileNotFoundException {
+        PdfWriter pdfWriter = new PdfWriter(filePath);
         PdfDocument pdfDocument = new PdfDocument(pdfWriter);
         pdfDocument.setDefaultPageSize(PageSize.A4);
-        Document document = new Document(pdfDocument);
 
-        try {
-            addHeader(document);
+        try (Document document = new Document(pdfDocument)) {
+            addHeader(document, invoiceDTO);
             addDivider(document);
             addSellerAndCustomerInfo(document);
             addDivider(document);
-            addSoldItemsTable(document);
-            addTotalSummary(document);
-//            addFinalDivider(document);
-        } finally {
-            document.close();
+            addSoldItemsTable(document, invoiceDTO);
+            addTotalSummary(document, invoiceDTO);
         }
     }
 
-    private static void addHeader(Document document) {
+    private void addHeader(Document document, InvoiceDTO invoiceDTO) {
         Table headerTable = new Table(HEADER_TABLE_WIDTH).setMarginBottom(5f);
         headerTable.addCell(createBoldCell("SHOP-PROJECT"));
 
         Table nestedTable = new Table(NESTED_TABLE_IN_HEADER_WIDTH);
         nestedTable.addCell(createBoldRightAlignedCell("Invoice Number: "));
-        nestedTable.addCell(createLeftAlignedCell("234234234"));
+        nestedTable.addCell(createLeftAlignedCell(invoiceDTO.getInvoiceNumber()));
         nestedTable.addCell(createBoldRightAlignedCell("Invoice Date: "));
-        nestedTable.addCell(createLeftAlignedCell("11/10/2025"));
+        nestedTable.addCell(createLeftAlignedCell(String.valueOf(invoiceDTO.getInvoiceDate())));
 
         headerTable.addCell(new Cell().add(nestedTable).setBorder(Border.NO_BORDER));
         document.add(headerTable);
     }
 
-    private static void addDivider(Document document) {
+    private void addDivider(Document document) {
         Table divider = new Table(FULL_WIDTH_TABLE).setMarginBottom(5f);
         divider.setBorder(THIN_GRAY_BORDER);
         document.add(divider);
     }
 
-    private static void addSellerAndCustomerInfo(Document document) {
+    private void addSellerAndCustomerInfo(Document document) {
 
         Table sellerAndCustomerInfoTableHeader = new Table(TWO_COLUMN_WIDTH);
         sellerAndCustomerInfoTableHeader.addCell(createSellerAndCustomerCell("Seller Information"));
@@ -101,7 +84,7 @@ public class GeneratePdf {
         document.add(sellerAndBuyerInfoTableContent.setMarginBottom(12f));
     }
 
-    private static Table createInfoTable(String firstVal, String secondVal, String thirdVal, String fourthVal) {
+    private Table createInfoTable(String firstVal, String secondVal, String thirdVal, String fourthVal) {
         Table infoTable = new Table(ONE_COLUMN_WIDTH);
         infoTable.addCell(createLeftAligned10SizeCell(firstVal, true));
         infoTable.addCell(createLeftAligned10SizeCell(secondVal, false));
@@ -110,7 +93,7 @@ public class GeneratePdf {
         return infoTable;
     }
 
-    private static void addSoldItemsTable(Document document) {
+    private void addSoldItemsTable(Document document, InvoiceDTO invoiceDTO) {
 
         Table soldItemsTableHeader = new Table(SOLD_ITEMS_TABLE_COLUMNS_WIDTH).setMarginTop(10f);
         String[] headers = {"Ord. no.", "Name", "Quantity", "Unit price", "Price [PLN]"};
@@ -119,16 +102,12 @@ public class GeneratePdf {
         }
         document.add(soldItemsTableHeader);
 
-        List<OrderItem1> orderItems = createSampleOrderItems();
-        Order1 order1 = new Order1(1235123, orderItems, 3456234.11f);
-
         Table soldItemsTableContent = new Table(SOLD_ITEMS_TABLE_COLUMNS_WIDTH);
-        float totalSum = 0f;
+        List<OrderItemDTO> orderItemDTOList = invoiceDTO.getOrderItemDTOList();
 
-        for (int i = 0; i < order1.getOrderItems().size(); i++) {
-            OrderItem1 orderItem = orderItems.get(i);
-            float total = orderItem.getQuantity() * orderItem.getPriceAtPurchase();
-            totalSum += total;
+        for (int i = 0; i < orderItemDTOList.size(); i++) {
+            OrderItemDTO orderItem = orderItemDTOList.get(i);
+            double total = orderItem.getQuantity() * orderItem.getPriceAtPurchase();
 
             soldItemsTableContent.addCell(createCentredCell(String.valueOf(i+1)));
             soldItemsTableContent.addCell(createLeftAlignedCell(orderItem.getProductName()));
@@ -139,28 +118,8 @@ public class GeneratePdf {
         document.add(soldItemsTableContent.setMarginBottom(20f));
     }
 
-    private static List<OrderItem1> createSampleOrderItems() {
-        List<OrderItem1> orderItems = new ArrayList<>();
-        orderItems.add(new OrderItem1(1, 2, 10, "Item A", 50.99f));
-        orderItems.add(new OrderItem1(2, 1, 66, "Item B", 63.12f));
-        orderItems.add(new OrderItem1(3, 5, 22, "Item C", 12.34f));
-        orderItems.add(new OrderItem1(4, 3, 48, "Item D", 24.00f));
-        orderItems.add(new OrderItem1(5, 4, 33, "Item E", 77.50f));
-        orderItems.add(new OrderItem1(6, 2, 90, "Item F", 9.99f));
-        orderItems.add(new OrderItem1(7, 6, 71, "Item G", 88.88f));
-        orderItems.add(new OrderItem1(8, 1, 10, "Item H", 3.45f));
-        orderItems.add(new OrderItem1(9, 7, 11, "Item I", 13.45f));
-        orderItems.add(new OrderItem1(10, 8, 95, "Item J", 56.78f));
-        return orderItems;
-    }
+    private void addTotalSummary(Document document, InvoiceDTO invoiceDTO) {
 
-    private static void addTotalSummary(Document document) {
-
-        List<OrderItem1> orderItems = createSampleOrderItems();
-        float totalSum = 0f;
-        for (OrderItem1 orderItem : orderItems) {
-            totalSum += orderItem.getQuantity() * orderItem.getPriceAtPurchase();
-        }
         float[] totalTableWidth = {FULL_WIDTH-250f, 250f};
         Table totalTable = new Table(totalTableWidth);
         totalTable.addCell(new Cell().add(new Paragraph("")).setBorder(Border.NO_BORDER));
@@ -173,7 +132,7 @@ public class GeneratePdf {
         Table totalRow = new Table(new float[] {330f, 70f, 170f});
         totalRow.addCell(new Cell().add(new Paragraph("")).setBorder(Border.NO_BORDER));
         totalRow.addCell(createLeftAlignedCell("Total"));
-        totalRow.addCell(createRightAlignedCell(CURRENCY_FORMAT.format(totalSum)));
+        totalRow.addCell(createRightAlignedCell(CURRENCY_FORMAT.format(invoiceDTO.getTotalPrice())));
         document.add(totalRow);
     }
 
@@ -209,25 +168,4 @@ public class GeneratePdf {
         Cell cell = new Cell().add(new Paragraph(textValue).setFontSize(10f)).setBorder(Border.NO_BORDER).setTextAlignment(TextAlignment.LEFT);
         return isBold ?cell.setBold():cell;
     }
-}
-
-@Getter
-@Setter
-@AllArgsConstructor
-class OrderItem1 {
-    private int orderItemId;
-    private int orderId;
-    private int quantity;
-    private String productName;
-    private float priceAtPurchase;
-}
-
-@Getter
-@Setter
-@AllArgsConstructor
-class Order1 {
-    private int invoiceNumber;
-    private List<OrderItem1> orderItems;
-    private float total;
-
 }
