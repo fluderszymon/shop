@@ -15,6 +15,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, Integer> {
             "ci.cartItemId, ci.cart.cartId, ci.product.productId, ci.quantity) " +
             "FROM CartItem ci " +
             "WHERE ci.cart.cartId=?1")
-    List<CartItemDTO> findAllCartItemsByCartId(int cartItemId);
+    List<CartItemDTO> findAllCartItemsByCartId(int cartId);
 
 }

@@ -4,16 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class UserDTO {
+public class OrderDTO {
 
+    private int orderId;
     private int userId;
-    private String username;
-    private String email;
-    private String role;
-    private int cartId;
-    private String Address;
+    private double totalPrice;
+    private LocalDate orderDate;
 
 }

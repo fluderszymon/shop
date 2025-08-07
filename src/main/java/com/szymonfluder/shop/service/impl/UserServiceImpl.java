@@ -6,7 +6,6 @@ import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
 import com.szymonfluder.shop.service.UserService;
-import org.aspectj.lang.annotation.After;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +30,11 @@ public class UserServiceImpl implements UserService {
 
     public UserDTO getUserByUsername(String username) {
         return userRepository.findUserDTOByUsername(username);
+    }
+
+    @Override
+    public UserDTO getUserById(int userId) {
+        return userRepository.findById(userId).map(userMapper::userToUserDTO).orElse(null);
     }
 
     // password is visible
