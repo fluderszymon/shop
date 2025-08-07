@@ -3,6 +3,10 @@ package com.szymonfluder.shop.service.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.szymonfluder.shop.dto.CartItemDTO;
+import com.szymonfluder.shop.dto.ProductDTO;
+import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.szymonfluder.shop.dto.OrderItemDTO;
@@ -19,12 +23,14 @@ public class OrderItemServiceImpl implements OrderItemService{
     private final OrderItemRepository orderItemRepository;
     private final ProductService productService;
     private final OrderItemMapper orderItemMapper;
+    private final ProductRepository productRepository;
 
     @Autowired
-    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, ProductService productService, OrderItemMapper orderItemMapper) {
+    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, ProductService productService, OrderItemMapper orderItemMapper, ProductRepository productRepository) {
         this.orderItemRepository = orderItemRepository;
         this.productService = productService;
         this.orderItemMapper = orderItemMapper;
+        this.productRepository = productRepository;
     }
 
     @Override
@@ -40,6 +46,7 @@ public class OrderItemServiceImpl implements OrderItemService{
         return orderItemRepository.findAllOrderItemsByOrderId(orderId);
     }
 
+    @Override
     public OrderItemDTO getOrderItemById(Integer orderItemId) {
         OrderItem orderItem = orderItemRepository.findById(orderItemId)
             .orElseThrow(() -> new RuntimeException("Order item not found"));
@@ -53,5 +60,19 @@ public class OrderItemServiceImpl implements OrderItemService{
             return orderItemMapper.orderItemToOrderItemDTO(savedOrderItem);
         }
         return null;
+    }
+
+    public OrderItemDTO addOrderItemFromCartItem(CartItemDTO cartItemDTO, int orderId) {
+        OrderItemDTO orderItemDTO = new OrderItemDTO();
+        orderItemDTO.setOrderId(orderId);
+        orderItemDTO.setQuantity(cartItemDTO.getQuantity());
+        Product product = productRepository.findById(cartItemDTO.getProductId()).orElse(new Product());
+        orderItemDTO.setProductName(product.getName());
+        orderItemDTO.setProductId(cartItemDTO.getProductId());
+        orderItemDTO.setPriceAtPurchase(product.getPrice());
+        OrderItem savedOrderItem = orderItemMapper.orderItemDTOToOrderItem(orderItemDTO);
+        savedOrderItem.setProduct(product);
+        orderItemRepository.save(savedOrderItem);
+        return orderItemMapper.orderItemToOrderItemDTO(savedOrderItem);
     }
 }

@@ -42,4 +42,10 @@ public class OrderController {
     public OrderItemDTO addOrderItem(@PathVariable int orderId, @RequestBody OrderItemDTO orderItemDTO) {
         return orderItemService.addOrderItem(orderItemDTO);
     }
+
+    @GetMapping("/checkout/{userId}/{cartId}")
+    public void checkout(@PathVariable int userId, @PathVariable int cartId) {
+        orderService.checkout(userId, cartId);
+    }
+
 }

@@ -34,6 +34,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<ProductDTO> getProdutsByIdList(List<Integer> idList) {
+        List<Product> products = productRepository.findAllById(idList);
+        return products
+                .stream()
+                .map(productMapper::productToProductDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ProductDTO getProductById(int productId) {
         Product foundProduct = productRepository.findById(productId).orElse(new Product());
         return productMapper.productToProductDTO(foundProduct);
