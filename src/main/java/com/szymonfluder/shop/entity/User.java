@@ -39,4 +39,7 @@ public class User {
     @OneToOne(mappedBy="user")
     private Cart cart;
 
+    @Column(name="address")
+    private String address;
+
 }

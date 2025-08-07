@@ -14,5 +14,6 @@ public class UserDTO {
     private String email;
     private String role;
     private int cartId;
+    private String Address;
 
 }

@@ -8,7 +8,7 @@ public interface OrderService {
     
     List<OrderDTO> getAllOrders();
     OrderDTO getOrderById(int id);
-    OrderDTO addOrder(int userId);
+    OrderDTO addOrder(int userId, int cartId);
 
     double getOrderTotal(int cartId);
 }

@@ -78,7 +78,7 @@ public class CartServiceImpl implements CartService {
         double total = 0;
         for (CartItemDTO cartItemDTO : cartItemDTOs) {
             double productPrice = productService.getProductById(cartItemDTO.getProductId()).getPrice();
-            total =+ cartItemDTO.getQuantity() * productPrice;
+            total += cartItemDTO.getQuantity() * productPrice;
         }
         return total;
     }

@@ -16,5 +16,7 @@ public class InvoiceDTO {
     private LocalDate invoiceDate;
     private List<OrderItemDTO> orderItemDTOList;
     private double totalPrice;
+    private String userName;
+    private String userAddress;
 
 }

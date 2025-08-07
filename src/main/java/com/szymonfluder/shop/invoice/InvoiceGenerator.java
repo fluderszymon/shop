@@ -1,4 +1,4 @@
-package com.szymonfluder.shop.pdf_creation;
+package com.szymonfluder.shop.invoice;
 
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.geom.PageSize;
@@ -14,12 +14,13 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.szymonfluder.shop.dto.InvoiceDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
+import com.szymonfluder.shop.util.SellerDetails;
 
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.util.List;
 
-public class GeneratePdf {
+public class InvoiceGenerator {
 
     private static final float FULL_WIDTH = 570f;
     private static final float[] ONE_COLUMN_WIDTH = {FULL_WIDTH/2};
@@ -41,7 +42,7 @@ public class GeneratePdf {
         try (Document document = new Document(pdfDocument)) {
             addHeader(document, invoiceDTO);
             addDivider(document);
-            addSellerAndCustomerInfo(document);
+            addSellerAndCustomerInfo(document, invoiceDTO);
             addDivider(document);
             addSoldItemsTable(document, invoiceDTO);
             addTotalSummary(document, invoiceDTO);
@@ -68,15 +69,15 @@ public class GeneratePdf {
         document.add(divider);
     }
 
-    private void addSellerAndCustomerInfo(Document document) {
+    private void addSellerAndCustomerInfo(Document document, InvoiceDTO invoiceDTO) {
 
         Table sellerAndCustomerInfoTableHeader = new Table(TWO_COLUMN_WIDTH);
         sellerAndCustomerInfoTableHeader.addCell(createSellerAndCustomerCell("Seller Information"));
         sellerAndCustomerInfoTableHeader.addCell(createSellerAndCustomerCell("Customer Information"));
         document.add(sellerAndCustomerInfoTableHeader.setMarginBottom(12f));
 
-        Table sellerData = createInfoTable("Company", "Shop-project", "Address", "924 New St. Santa Clara, CA 95051");
-        Table customerData = createInfoTable("Name", "John Legend", "Address", "56 Canal Ave. Los Angeles, CA 90063");
+        Table sellerData = createInfoTable("Company", SellerDetails.COMPANY_NAME, "Address", SellerDetails.COMPANY_ADDRESS);
+        Table customerData = createInfoTable("Name", invoiceDTO.getUserName(), "Address", invoiceDTO.getUserAddress());
 
         Table sellerAndBuyerInfoTableContent = new Table(TWO_COLUMN_WIDTH);
         sellerAndBuyerInfoTableContent.addCell(new Cell().add(sellerData).setBorder(Border.NO_BORDER));

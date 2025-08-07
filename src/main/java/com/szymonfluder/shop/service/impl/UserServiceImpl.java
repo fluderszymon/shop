@@ -32,6 +32,11 @@ public class UserServiceImpl implements UserService {
         return userRepository.findUserDTOByUsername(username);
     }
 
+    @Override
+    public UserDTO getUserById(int userId) {
+        return userRepository.findById(userId).map(userMapper::userToUserDTO).orElse(null);
+    }
+
     // password is visible
     public User addUser(UserRegisterDTO userRegisterDTO) {
         User user = userMapper.userRegisterDTOToUser(userRegisterDTO);

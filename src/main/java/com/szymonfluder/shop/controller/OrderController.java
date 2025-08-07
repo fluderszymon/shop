@@ -2,7 +2,6 @@ package com.szymonfluder.shop.controller;
 
 import java.util.List;
 
-import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.service.OrderItemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +28,9 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    @PostMapping("{userId}")
-    public OrderDTO addOrder(@PathVariable int userId) {
-        return orderService.addOrder(userId);
+    @PostMapping("{userId}/{cartId}")
+    public OrderDTO addOrder(@PathVariable int userId, @PathVariable int cartId) {
+        return orderService.addOrder(userId, cartId);
     }
 
     @GetMapping("/{orderId}/items")
@@ -43,5 +42,4 @@ public class OrderController {
     public OrderItemDTO addOrderItem(@PathVariable int orderId, @RequestBody OrderItemDTO orderItemDTO) {
         return orderItemService.addOrderItem(orderItemDTO);
     }
-    
 }
