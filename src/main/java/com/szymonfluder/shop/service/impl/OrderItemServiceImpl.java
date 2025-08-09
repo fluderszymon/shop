@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,8 @@ public class OrderItemServiceImpl implements OrderItemService{
     private final ProductRepository productRepository;
 
     @Autowired
-    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, ProductService productService, OrderItemMapper orderItemMapper, ProductRepository productRepository) {
+    public OrderItemServiceImpl(OrderItemRepository orderItemRepository, ProductService productService,
+                                OrderItemMapper orderItemMapper, ProductRepository productRepository) {
         this.orderItemRepository = orderItemRepository;
         this.productService = productService;
         this.orderItemMapper = orderItemMapper;
@@ -42,15 +42,15 @@ public class OrderItemServiceImpl implements OrderItemService{
     }
 
     @Override
-    public List<OrderItemDTO> getAllOrderItemsByOrderId(Integer orderId) {
-        return orderItemRepository.findAllOrderItemsByOrderId(orderId);
+    public OrderItemDTO getOrderItemById(int orderItemId) {
+        OrderItem orderItem = orderItemRepository.findById(orderItemId)
+                .orElseThrow(() -> new RuntimeException("Order item not found"));
+        return orderItemMapper.orderItemToOrderItemDTO(orderItem);
     }
 
     @Override
-    public OrderItemDTO getOrderItemById(Integer orderItemId) {
-        OrderItem orderItem = orderItemRepository.findById(orderItemId)
-            .orElseThrow(() -> new RuntimeException("Order item not found"));
-        return orderItemMapper.orderItemToOrderItemDTO(orderItem);
+    public List<OrderItemDTO> getAllOrderItemsByOrderId(int orderId) {
+        return orderItemRepository.findAllOrderItemsByOrderId(orderId);
     }
 
     @Override

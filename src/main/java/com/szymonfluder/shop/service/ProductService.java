@@ -1,10 +1,12 @@
 package com.szymonfluder.shop.service;
 
+import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ProductService {
 
@@ -16,5 +18,6 @@ public interface ProductService {
     Product updateProduct(Product product);
 
     boolean isEnough(int productId, int orderedQuantity);
+    void updateProducts(Map<ProductDTO, CartItemDTO> productCreateDTOList);
 
 }

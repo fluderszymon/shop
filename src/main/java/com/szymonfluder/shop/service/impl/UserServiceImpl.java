@@ -58,7 +58,18 @@ public class UserServiceImpl implements UserService {
             updatedUser.setEmail(user.getEmail());
             updatedUser.setPassword(user.getPassword());
             updatedUser.setRole(user.getRole());
+            updatedUser.setAddress(user.getAddress());
+            updatedUser.setBalance(user.getBalance());
         }
         return userRepository.save(updatedUser);
+    }
+
+    @Override
+    public void updateUserBalance(int userId, double newBalance) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user != null) {
+            user.setBalance(newBalance);
+            userRepository.save(user);
+        }
     }
 }

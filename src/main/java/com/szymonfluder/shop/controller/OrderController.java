@@ -28,24 +28,18 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    @PostMapping("{userId}/{cartId}")
-    public OrderDTO addOrder(@PathVariable int userId, @PathVariable int cartId) {
-        return orderService.addOrder(userId, cartId);
+    @GetMapping("/{orderId}")
+    public OrderDTO getOrderById(@PathVariable int orderId) {
+        return orderService.getOrderById(orderId);
     }
 
-    @GetMapping("/{orderId}/items")
+    @GetMapping("/{orderId}/order-items")
     public List<OrderItemDTO> getOrderItemsInOrderByOrderId(@PathVariable int orderId) {
         return orderItemService.getAllOrderItemsByOrderId(orderId);
     }
 
-    @PostMapping("{orderId}/items")
-    public OrderItemDTO addOrderItem(@PathVariable int orderId, @RequestBody OrderItemDTO orderItemDTO) {
-        return orderItemService.addOrderItem(orderItemDTO);
-    }
-
-    @GetMapping("/checkout/{userId}/{cartId}")
+    @PostMapping("/checkout/{userId}/{cartId}")
     public void checkout(@PathVariable int userId, @PathVariable int cartId) {
         orderService.checkout(userId, cartId);
     }
-
 }

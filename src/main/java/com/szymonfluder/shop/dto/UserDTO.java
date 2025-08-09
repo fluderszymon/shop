@@ -15,5 +15,6 @@ public class UserDTO {
     private String role;
     private int cartId;
     private String Address;
+    private double balance;
 
 }
