@@ -18,6 +18,4 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             "WHERE oi.order.orderId=?1")
     List<OrderItemDTO> findAllOrderItemsByOrderId(int orderId);
 
-
-
 }

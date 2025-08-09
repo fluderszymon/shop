@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.service.impl;
 
+import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
@@ -10,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -28,6 +30,15 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll()
+                .stream()
+                .map(productMapper::productToProductDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductDTO> getProdutsByIdList(List<Integer> idList) {
+        List<Product> products = productRepository.findAllById(idList);
+        return products
                 .stream()
                 .map(productMapper::productToProductDTO)
                 .collect(Collectors.toList());
@@ -67,5 +78,17 @@ public class ProductServiceImpl implements ProductService {
     public boolean isEnough(int productId, int orderedQuantity) {
         ProductDTO productDTO = getProductById(productId);
         return productDTO.getStock() >= orderedQuantity;
+    }
+
+    public void updateProducts(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
+        for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
+            Product updatedProduct = productRepository.findById(mapEntry.getKey().getProductId()).orElse(new Product());
+            updatedProduct.setProductId(mapEntry.getKey().getProductId());
+            updatedProduct.setName(mapEntry.getKey().getName());
+            updatedProduct.setDescription(mapEntry.getKey().getDescription());
+            updatedProduct.setPrice(mapEntry.getKey().getPrice());
+            updatedProduct.setStock(mapEntry.getKey().getStock()-mapEntry.getValue().getQuantity());
+            updateProduct(updatedProduct);
+        }
     }
 }

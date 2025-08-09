@@ -14,5 +14,6 @@ public interface UserService {
     User addUser(UserRegisterDTO userRegisterDTO);
     void deleteUserById(int userId);
     User updateUser(User user);
+    void updateUserBalance(int userId, double newBalance);
 
 }
