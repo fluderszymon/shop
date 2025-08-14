@@ -1,24 +1,14 @@
 package com.szymonfluder.shop.service.impl;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
-import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.dto.OrderDTO;
-import com.szymonfluder.shop.dto.ProductDTO;
-import com.szymonfluder.shop.dto.UserDTO;
-import com.szymonfluder.shop.entity.Order;
-import com.szymonfluder.shop.entity.Product;
-import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.dto.*;
+import com.szymonfluder.shop.entity.*;
+import com.szymonfluder.shop.mapper.OrderItemMapper;
 import com.szymonfluder.shop.mapper.OrderMapper;
-import com.szymonfluder.shop.mapper.UserMapper;
-import com.szymonfluder.shop.repository.OrderRepository;
-import com.szymonfluder.shop.repository.ProductRepository;
-import com.szymonfluder.shop.repository.UserRepository;
+import com.szymonfluder.shop.repository.*;
 import com.szymonfluder.shop.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,28 +19,34 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
-    private final OrderItemService orderItemService;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderItemMapper orderItemMapper;
     private final CartService cartService;
     private final ProductService productService;
     private final CartItemService cartItemService;
     private final UserService userService;
-    private final UserMapper userMapper;
+    private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CartRepository cartRepository;
+
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderMapper orderMapper,
-                            OrderItemService orderItemService, CartService cartService,
-                            ProductService productService, CartItemService cartItemService,
-                            UserService userService, UserMapper userMapper, UserRepository userRepository) {
+                            OrderItemRepository orderItemRepository, OrderItemMapper orderItemMapper,
+                            CartService cartService, ProductService productService,
+                            CartItemService cartItemService, UserService userService,
+                            ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
-        this.orderItemService = orderItemService;
+        this.orderItemRepository = orderItemRepository;
+        this.orderItemMapper = orderItemMapper;
         this.cartService = cartService;
         this.productService = productService;
         this.cartItemService = cartItemService;
         this.userService = userService;
-        this.userMapper = userMapper;
+        this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -69,7 +65,71 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDTO addOrder(int userId, int cartId) {
+    public List<OrderItemDTO> getAllOrderItems() {
+        return orderItemRepository.findAll()
+                .stream()
+                .map(orderItemMapper::orderItemToOrderItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderItemDTO> getAllOrderItemsByOrderId(int orderId) {
+        return orderItemRepository.findAllOrderItemsByOrderId(orderId);
+    }
+
+    @Transactional
+    @Override
+    public void checkout(int userId, int cartId) {
+        List<CartItemDTO> cartItemDTOList = cartItemService.getAllCartItemsByCartId(cartId);
+        validateCartNotEmpty(cartItemDTOList);
+
+        Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = mapProductsDTOsToCartItemDTOs(cartItemDTOList);
+        validateStockAvailability(productDTOCartItemDTOMap);
+
+        double userBalance = userService.getUserBalance(userId);
+        double cartTotal = cartService.getCartTotal(cartId);
+        validateUserBalance(userBalance, cartTotal);
+
+        processCheckout(userId, cartId, cartItemDTOList, productDTOCartItemDTOMap, userBalance, cartTotal);
+
+        cleanupCart(cartId, userId, cartItemDTOList);
+    }
+
+    private void validateCartNotEmpty(List<CartItemDTO> cartItemDTOList) {
+        if (cartItemDTOList.isEmpty()) {
+            throw new RuntimeException("Cart is empty");
+        }
+    }
+
+    private void validateStockAvailability(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
+        for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
+            if (mapEntry.getKey().getStock() < mapEntry.getValue().getQuantity()) {
+                throw new RuntimeException("Not enough products in stock");
+            }
+        }
+    }
+
+    private void validateUserBalance(double userBalance, double cartTotal) {
+        if (cartTotal > userBalance) {
+            throw new RuntimeException("Insufficient balance");
+        }
+    }
+
+    @Transactional
+    public void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
+                                 Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
+                                 double userBalance, double cartTotal) {
+
+        productService.updateProducts(productDTOCartItemDTOMap);
+
+        OrderDTO orderDTO = createOrder(userId, cartId);
+        createOrderItemsFromCartItems(cartItemDTOList, orderDTO.getOrderId());
+
+        double newBalance = userBalance - cartTotal;
+        userService.updateUserBalance(userId, newBalance);
+    }
+
+    private OrderDTO createOrder(int userId, int cartId) {
         OrderDTO orderDTO = new OrderDTO();
         orderDTO.setUserId(userId);
         orderDTO.setTotalPrice(cartService.getCartTotal(cartId));
@@ -78,65 +138,61 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.orderToOrderDTO(savedOrder);
     }
 
-    @Transactional
-    @Override
-    public void checkout(int userId, int cartId) {
-        List<CartItemDTO> cartItemDTOList = cartItemService.getAllCartItemsByCartId(cartId);
-        List<Integer> cartItemProductIds = getCartItemProductIds(cartItemDTOList);
-        List<ProductDTO> productDTOList = productService.getProdutsByIdList(cartItemProductIds);
-        Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = getProductDTOCartItemDTOMap(productDTOList, cartItemDTOList);
-        boolean isEnoughInProductQuantity = isEnoughInStock(productDTOCartItemDTOMap);
-        double userBalance = userService.getUserById(userId).getBalance();
-        double cartTotal = cartService.getCartTotal(cartId);
-        boolean isAbleToPay = cartTotal <= userBalance;
-
-        if (isEnoughInProductQuantity && isAbleToPay) {
-            productService.updateProducts(productDTOCartItemDTOMap);
-            OrderDTO orderDTO = addOrder(userId, cartId);
-            for (CartItemDTO cartItemDTO : cartItemDTOList) {
-                orderItemService.addOrderItemFromCartItem(cartItemDTO, orderDTO.getOrderId());
-            }
-            for (CartItemDTO cartItemDTO : cartItemDTOList) {
-                cartItemService.deleteCartItemById(cartItemDTO.getCartItemId());
-            }
-
-            double newBalance = userBalance - cartTotal;
-            userService.updateUserBalance(userId, newBalance);
-
-            cartService.deleteCartById(cartId);
-        } else {
-            throw new RuntimeException("Not enough product in stock");
-        }
-    }
-
-    private Map<ProductDTO, CartItemDTO> getProductDTOCartItemDTOMap(List<ProductDTO> productDTOList, List<CartItemDTO> cartItemDTOList) {
-        Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = new HashMap<>();
-        for (ProductDTO productDTO : productDTOList) {
-            for (CartItemDTO cartItemDTO : cartItemDTOList) {
-                if (cartItemDTO.getProductId() == productDTO.getProductId()) {
-                    productDTOCartItemDTOMap.put(productDTO, cartItemDTO);
-                }
-            }
-        }
-        return productDTOCartItemDTOMap;
-    }
-
-    private List<Integer> getCartItemProductIds(List<CartItemDTO> cartItemDTOList) {
-        ArrayList<Integer> cartItemProductIds = new ArrayList<>();
+    private void createOrderItemsFromCartItems(List<CartItemDTO> cartItemDTOList, int orderId) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
-            cartItemProductIds.add(cartItemDTO.getProductId());
+            addOrderItemFromCartItem(cartItemDTO, orderId);
         }
-        return cartItemProductIds;
     }
 
-    private boolean isEnoughInStock(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
-        boolean isEnoughInStock = true;
-        for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
-            if (mapEntry.getKey().getStock() < mapEntry.getValue().getQuantity()) {
-                isEnoughInStock = false;
-                break;
+    @Transactional
+    public void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
+        for (CartItemDTO cartItemDTO : cartItemDTOList) {
+            cartItemService.deleteCartItemById(cartItemDTO.getCartItemId());
+        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setCart(null);
+        cartRepository.deleteById(cartId);
+    }
+
+    private void addOrderItemFromCartItem(CartItemDTO cartItemDTO, int orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
+        Product product = productRepository.findById(cartItemDTO.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setProduct(product);
+        orderItem.setQuantity(cartItemDTO.getQuantity());
+        orderItem.setPriceAtPurchase(product.getPrice());
+
+        orderItemRepository.save(orderItem);
+    }
+
+    private List<Integer> extractProductIdsFromCartItemDTOList(List<CartItemDTO> cartItemDTOList) {
+        if (cartItemDTOList.isEmpty()) {throw new RuntimeException("cartItemDTOList is empty");}
+        ArrayList<Integer> productIds = new ArrayList<>();
+        for (CartItemDTO cartItemDTO : cartItemDTOList) {
+            productIds.add(cartItemDTO.getProductId());
+        }
+        return productIds;
+    }
+
+    private Map<ProductDTO, CartItemDTO> mapProductsDTOsToCartItemDTOs(List<CartItemDTO> cartItemDTOList) {
+
+        List<Integer> cartItemProductIds = extractProductIdsFromCartItemDTOList(cartItemDTOList);
+        List<ProductDTO> productDTOList = productService.getProdutsByIdList(cartItemProductIds);
+
+        Map<Integer, CartItemDTO> cartItemByProductId = new HashMap<>();
+        for (CartItemDTO cartItemDTO : cartItemDTOList) {
+            cartItemByProductId.put(cartItemDTO.getProductId(), cartItemDTO);
+        }
+
+        Map<ProductDTO, CartItemDTO> result = new HashMap<>();
+        for (ProductDTO productDTO : productDTOList) {
+            CartItemDTO cartItemDTO = cartItemByProductId.get(productDTO.getProductId());
+            if (cartItemDTO != null) {
+                result.put(productDTO, cartItemDTO);
             }
         }
-        return isEnoughInStock;
+        return result;
     }
 }

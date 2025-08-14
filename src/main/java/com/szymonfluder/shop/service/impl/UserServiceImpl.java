@@ -5,6 +5,7 @@ import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
+import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
     }
@@ -34,7 +35,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUserById(int userId) {
-        return userRepository.findById(userId).map(userMapper::userToUserDTO).orElse(null);
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        return userMapper.userToUserDTO(user);
+    }
+
+    @Override
+    public double getUserBalance(int userId) {
+        UserDTO userDTO = userRepository.findUserDTOById(userId);
+        return userDTO.getBalance();
     }
 
     // password is visible
@@ -66,10 +74,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUserBalance(int userId, double newBalance) {
-        User user = userRepository.findById(userId).orElse(null);
-        if (user != null) {
-            user.setBalance(newBalance);
-            userRepository.save(user);
-        }
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        user.setBalance(newBalance);
+        userRepository.save(user);
     }
 }
