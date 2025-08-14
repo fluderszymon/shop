@@ -3,7 +3,6 @@ package com.szymonfluder.shop.controller;
 import java.util.List;
 
 import com.szymonfluder.shop.dto.OrderItemDTO;
-import com.szymonfluder.shop.service.OrderItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,12 +14,10 @@ import com.szymonfluder.shop.service.OrderService;
 public class OrderController {
 
     private final OrderService orderService;
-    private final OrderItemService orderItemService;
 
     @Autowired
-    public OrderController(OrderService orderService, OrderItemService orderItemService) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
-        this.orderItemService = orderItemService;
     }
 
     @GetMapping
@@ -28,18 +25,23 @@ public class OrderController {
         return orderService.getAllOrders();
     }
 
-    @PostMapping("{userId}/{cartId}")
-    public OrderDTO addOrder(@PathVariable int userId, @PathVariable int cartId) {
-        return orderService.addOrder(userId, cartId);
+    @GetMapping("/{orderId}")
+    public OrderDTO getOrderById(@PathVariable int orderId) {
+        return orderService.getOrderById(orderId);
     }
 
-    @GetMapping("/{orderId}/items")
+    @GetMapping("/order-items")
+    public List<OrderItemDTO> getAllOrderItems() {
+        return orderService.getAllOrderItems();
+    }
+
+    @GetMapping("/{orderId}/order-items")
     public List<OrderItemDTO> getOrderItemsInOrderByOrderId(@PathVariable int orderId) {
-        return orderItemService.getAllOrderItemsByOrderId(orderId);
+        return orderService.getAllOrderItemsByOrderId(orderId);
     }
 
-    @PostMapping("{orderId}/items")
-    public OrderItemDTO addOrderItem(@PathVariable int orderId, @RequestBody OrderItemDTO orderItemDTO) {
-        return orderItemService.addOrderItem(orderItemDTO);
+    @PostMapping("/checkout/{userId}/{cartId}")
+    public void checkout(@PathVariable int userId, @PathVariable int cartId) {
+        orderService.checkout(userId, cartId);
     }
 }

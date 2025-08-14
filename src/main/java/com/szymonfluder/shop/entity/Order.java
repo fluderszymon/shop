@@ -6,7 +6,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
+
+import java.time.LocalDate;
 import java.util.List;
 
 @NoArgsConstructor
@@ -24,7 +25,7 @@ public class Order {
     @JoinColumn(name="user_id")
     private User user;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems;
 
     @NotNull
@@ -34,5 +35,5 @@ public class Order {
 
     @NotNull
     @Column(name="order_date")
-    private LocalDateTime orderDate;
+    private LocalDate orderDate;
 }
