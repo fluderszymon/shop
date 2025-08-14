@@ -120,7 +120,7 @@ public class OrderServiceImpl implements OrderService {
                                  Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
                                  double userBalance, double cartTotal) {
 
-        productService.updateProducts(productDTOCartItemDTOMap);
+        productService.updateProductsStock(productDTOCartItemDTOMap);
 
         OrderDTO orderDTO = createOrder(userId, cartId);
         createOrderItemsFromCartItems(cartItemDTOList, orderDTO.getOrderId());

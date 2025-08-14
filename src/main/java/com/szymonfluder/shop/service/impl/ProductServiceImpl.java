@@ -80,13 +80,10 @@ public class ProductServiceImpl implements ProductService {
         return productDTO.getStock() >= orderedQuantity;
     }
 
-    public void updateProducts(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
+    @Override
+    public void updateProductsStock(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
         for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
-            Product updatedProduct = productRepository.findById(mapEntry.getKey().getProductId()).orElse(new Product());
-            updatedProduct.setProductId(mapEntry.getKey().getProductId());
-            updatedProduct.setName(mapEntry.getKey().getName());
-            updatedProduct.setDescription(mapEntry.getKey().getDescription());
-            updatedProduct.setPrice(mapEntry.getKey().getPrice());
+            Product updatedProduct = productRepository.findById(mapEntry.getKey().getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
             updatedProduct.setStock(mapEntry.getKey().getStock()-mapEntry.getValue().getQuantity());
             updateProduct(updatedProduct);
         }

@@ -18,6 +18,6 @@ public interface ProductService {
     Product updateProduct(Product product);
 
     boolean isEnough(int productId, int orderedQuantity);
-    void updateProducts(Map<ProductDTO, CartItemDTO> productCreateDTOList);
+    void updateProductsStock(Map<ProductDTO, CartItemDTO> productCreateDTOList);
 
 }
