@@ -6,7 +6,6 @@ import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.invoice.InvoiceGenerator;
 import com.szymonfluder.shop.service.InvoiceService;
-import com.szymonfluder.shop.service.OrderItemService;
 import com.szymonfluder.shop.service.OrderService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,11 @@ import java.util.List;
 public class InvoiceServiceImpl implements InvoiceService {
 
     private final OrderService orderService;
-    private final OrderItemService orderItemService;
     private final UserService userService;
 
     @Autowired
-    public InvoiceServiceImpl(OrderService orderService, OrderItemService orderItemService, UserService userService) {
+    public InvoiceServiceImpl(OrderService orderService, UserService userService) {
         this.orderService = orderService;
-        this.orderItemService = orderItemService;
         this.userService = userService;
     }
 
@@ -64,7 +61,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     public InvoiceDTO createInvoiceDTO(int orderId) {
         InvoiceDTO invoiceDTO = new InvoiceDTO();
         OrderDTO orderDTO = orderService.getOrderById(orderId);
-        List<OrderItemDTO> orderItemDTOList = orderItemService.getAllOrderItemsByOrderId(orderId);
+        List<OrderItemDTO> orderItemDTOList = orderService.getAllOrderItemsByOrderId(orderId);
         UserDTO userDTO = userService.getUserById(orderDTO.getUserId());
 
         invoiceDTO.setInvoiceNumber("INV_" + orderDTO.getOrderId());

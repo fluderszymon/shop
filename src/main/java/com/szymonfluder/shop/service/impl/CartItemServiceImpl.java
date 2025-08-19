@@ -44,7 +44,7 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     public CartItemDTO getCartItemById(int cartItemId) {
-        CartItem foundCartItem = cartItemRepository.findById(cartItemId).orElse(new CartItem());
+        CartItem foundCartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> new RuntimeException("CartItem not found"));
         return cartItemMapper.cartItemToCartItemDTO(foundCartItem);
     }
 
