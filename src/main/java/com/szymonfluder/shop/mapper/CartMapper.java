@@ -12,6 +12,7 @@ public interface CartMapper {
     CartMapper INSTANCE = Mappers.getMapper(CartMapper.class);
 
     @Mapping(source="userId", target="user.userId")
+    @Mapping(target="cartItems", ignore = true)
     Cart CartDTOToCart(CartDTO cartDTO);
 
     @Mapping(source="user.userId", target="userId")

@@ -43,7 +43,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO getCartById(int cartId) {
-        Cart foundCart = cartRepository.findById(cartId ).orElse(null);
+        Cart foundCart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
         return cartMapper.CartToCartDTO(foundCart);
     }
 

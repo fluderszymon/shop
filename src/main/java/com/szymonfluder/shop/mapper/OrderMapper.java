@@ -15,6 +15,7 @@ public interface OrderMapper {
     OrderDTO orderToOrderDTO(Order order);
 
     @Mapping(source="userId", target="user.userId")
+    @Mapping(target="orderItems", ignore = true)
     Order orderDTOToOrder(OrderDTO orderDTO);
 
 }
