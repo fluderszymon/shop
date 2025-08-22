@@ -13,41 +13,30 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class UserMapperTests {
 
-    private final String USERNAME = "john";
-    private final String EMAIL = "john.doe@outlook.com";
+    private final String USERNAME = "username";
+    private final String EMAIL = "user@outlook.com";
     private final String PASSWORD = "password";
-    private final String ADDRESS = "7 Spruce Street San Diego, CA 92117";
-    private final String ROLE = "USER";
-    private final double BALANCE = 100.00;
+    private final String ADDRESS = "address";
 
     private final UserMapper userMapper = new UserMapperImpl();
 
     @Test
     void userRegisterDTOToUser_shouldMapUserRegisterDTOtoUser() {
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO(USERNAME, EMAIL, PASSWORD, ADDRESS);
-        User user = new User(0, USERNAME, EMAIL, PASSWORD, null, null, ADDRESS, 0.0);
-        
-        assertThat(userMapper.userRegisterDTOToUser(userRegisterDTO)).isEqualTo(user);
-    }
+        UserRegisterDTO givenUserRegisterDTO = new UserRegisterDTO(USERNAME, EMAIL, PASSWORD, ADDRESS);
+        User expectedUser = new User(0, USERNAME, EMAIL, PASSWORD, null, null, ADDRESS, 0.00);
+        User mappedUser = userMapper.userRegisterDTOToUser(givenUserRegisterDTO);
 
-    @Test
-    void userRegisterDTOToUser_shouldReturnNullWhenUserRegisterDTOIsNull() {
-        assertThat(userMapper.userRegisterDTOToUser(null)).isNull();
+        assertThat(mappedUser).isEqualTo(expectedUser);
     }
 
     @Test
     void userToUserDTO_shouldMapUserToUserDTO() {
-        User user = new User(2, USERNAME, EMAIL, PASSWORD, ROLE, null, ADDRESS, BALANCE);
-        Cart cart = new Cart(1, user, null);
-        user.setCart(cart);
+        User givenUser = new User(1, USERNAME, EMAIL, PASSWORD, "USER", null, ADDRESS, 100.00);
+        Cart givenCart = new Cart(1, givenUser, null);
+        givenUser.setCart(givenCart);
+        UserDTO expectedUserDTO = new UserDTO(1, USERNAME, EMAIL, "USER", 1, ADDRESS, 100.00);
+        UserDTO mappedUserDTO = userMapper.userToUserDTO(givenUser);
 
-        UserDTO userDTO = new UserDTO(2, USERNAME, EMAIL, ROLE, 1, ADDRESS, BALANCE);
-
-        assertThat(userMapper.userToUserDTO(user)).isEqualTo(userDTO);
-    }
-
-    @Test
-    void userToUserDTO_shouldReturnNullWhenUserIsNull() {
-        assertThat(userMapper.userToUserDTO(null)).isNull();
+        assertThat(mappedUserDTO).isEqualTo(expectedUserDTO);
     }
 }

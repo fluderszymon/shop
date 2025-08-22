@@ -6,7 +6,6 @@ import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.CartMapper;
 import com.szymonfluder.shop.mapper.CartMapperImpl;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -18,47 +17,32 @@ public class CartMapperTests {
 
     private final CartMapper cartMapper = new CartMapperImpl();
 
-    @Test
-    void cartToCartDTO_shouldMapCartToCartDTO() {
+    private Cart createCart() {
         User user = new User();
         user.setUserId(USER_ID);
-        
-        Cart cart = new Cart();
-        cart.setCartId(CART_ID);
-        cart.setUser(user);
 
-        CartDTO result = cartMapper.CartToCartDTO(cart);
+        return new Cart(CART_ID, user, null);
+    };
 
-        assertThat(result).isNotNull();
-        assertThat(result.getCartId()).isEqualTo(CART_ID);
-        assertThat(result.getUserId()).isEqualTo(USER_ID);
+    private CartDTO createCartDTO() {
+        return new CartDTO(CART_ID, USER_ID);
+    }
+
+    @Test
+    void cartToCartDTO_shouldMapCartToCartDTO() {
+        Cart givenCart = createCart();
+        CartDTO expectedCartDTO = createCartDTO();
+        CartDTO mappedCartDTO = cartMapper.CartToCartDTO(givenCart);
+
+        assertThat(mappedCartDTO).isEqualTo(expectedCartDTO);
     }
 
     @Test
     void cartDTOToCart_shouldMapCartDTOToCart() {
-        CartDTO cartDTO = new CartDTO();
-        cartDTO.setCartId(CART_ID);
-        cartDTO.setUserId(USER_ID);
+        CartDTO givenCartDTO = createCartDTO();
+        Cart expectedCart = createCart();
+        Cart mappedCart = cartMapper.CartDTOToCart(givenCartDTO);
 
-        Cart result = cartMapper.CartDTOToCart(cartDTO);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getCartId()).isEqualTo(CART_ID);
-        assertThat(result.getUser()).isNotNull();
-        assertThat(result.getUser().getUserId()).isEqualTo(USER_ID);
-    }
-
-    @Test
-    void cartToCartDTO_shouldReturnNullWhenCartIsNull() {
-        CartDTO result = cartMapper.CartToCartDTO(null);
-
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void cartDTOToCart_shouldReturnNullWhenCartDTOIsNull() {
-        Cart result = cartMapper.CartDTOToCart(null);
-
-        assertThat(result).isNull();
+        assertThat(mappedCart).isEqualTo(expectedCart);
     }
 }

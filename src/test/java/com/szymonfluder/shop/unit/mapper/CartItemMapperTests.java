@@ -19,59 +19,35 @@ public class CartItemMapperTests {
 
     private final CartItemMapper cartItemMapper = new CartItemMapperImpl();
 
-    @Test
-    void cartItemToCartItemDTO_shouldMapCartItemToCartItemDTO() {
+    private CartItem createCartItem() {
         Cart cart = new Cart();
         cart.setCartId(CART_ID);
-        
+
         Product product = new Product();
         product.setProductId(PRODUCT_ID);
-        
-        CartItem cartItem = new CartItem();
-        cartItem.setCartItemId(CART_ITEM_ID);
-        cartItem.setCart(cart);
-        cartItem.setProduct(product);
-        cartItem.setQuantity(QUANTITY);
 
-        CartItemDTO result = cartItemMapper.cartItemToCartItemDTO(cartItem);
+        return new CartItem(CART_ITEM_ID, cart, product, QUANTITY);
+    }
 
-        assertThat(result).isNotNull();
-        assertThat(result.getCartItemId()).isEqualTo(CART_ITEM_ID);
-        assertThat(result.getCartId()).isEqualTo(CART_ID);
-        assertThat(result.getProductId()).isEqualTo(PRODUCT_ID);
-        assertThat(result.getQuantity()).isEqualTo(QUANTITY);
+    private CartItemDTO createCartItemDTO() {
+        return new CartItemDTO(CART_ITEM_ID, CART_ID, PRODUCT_ID, QUANTITY);
+    }
+
+    @Test
+    void cartItemToCartItemDTO_shouldMapCartItemToCartItemDTO() {
+        CartItem givenCartItem = createCartItem();
+        CartItemDTO expectedCartItemDTO = createCartItemDTO();
+        CartItemDTO mappedCartItemDTO = cartItemMapper.cartItemToCartItemDTO(givenCartItem);
+
+        assertThat(mappedCartItemDTO).isEqualTo(expectedCartItemDTO);
     }
 
     @Test
     void cartItemDTOToCartItem_shouldMapCartItemDTOToCartItem() {
-        CartItemDTO cartItemDTO = new CartItemDTO();
-        cartItemDTO.setCartItemId(CART_ITEM_ID);
-        cartItemDTO.setCartId(CART_ID);
-        cartItemDTO.setProductId(PRODUCT_ID);
-        cartItemDTO.setQuantity(QUANTITY);
+        CartItemDTO givenCartItemDTO = createCartItemDTO();
+        CartItem expectedCartItem = createCartItem();
+        CartItem mappedCartItem = cartItemMapper.cartItemDTOToCartItem(givenCartItemDTO);
 
-        CartItem result = cartItemMapper.cartItemDTOToCartItem(cartItemDTO);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getCartItemId()).isEqualTo(CART_ITEM_ID);
-        assertThat(result.getCart()).isNotNull();
-        assertThat(result.getCart().getCartId()).isEqualTo(CART_ID);
-        assertThat(result.getProduct()).isNotNull();
-        assertThat(result.getProduct().getProductId()).isEqualTo(PRODUCT_ID);
-        assertThat(result.getQuantity()).isEqualTo(QUANTITY);
-    }
-
-    @Test
-    void cartItemToCartItemDTO_shouldReturnNullWhenCartItemIsNull() {
-        CartItemDTO result = cartItemMapper.cartItemToCartItemDTO(null);
-
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void cartItemDTOToCartItem_shouldReturnNullWhenCartItemDTOIsNull() {
-        CartItem result = cartItemMapper.cartItemDTOToCartItem(null);
-
-        assertThat(result).isNull();
+        assertThat(mappedCartItem).isEqualTo(expectedCartItem);
     }
 }

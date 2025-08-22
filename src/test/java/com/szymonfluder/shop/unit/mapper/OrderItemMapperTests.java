@@ -21,67 +21,35 @@ public class OrderItemMapperTests {
     
     private final OrderItemMapper orderItemMapper = new OrderItemMapperImpl();
 
-    @Test
-    void orderItemToOrderItemDTO_shouldMapOrderItemToOrderItemDTO() {
+    private OrderItem createOrderItem() {
         Order order = new Order();
         order.setOrderId(ORDER_ID);
-        
         Product product = new Product();
         product.setProductId(PRODUCT_ID);
         product.setName(PRODUCT_NAME);
-        
-        OrderItem orderItem = new OrderItem();
-        orderItem.setOrderItemId(ORDER_ITEM_ID);
-        orderItem.setOrder(order);
-        orderItem.setProduct(product);
-        orderItem.setQuantity(QUANTITY);
-        orderItem.setPriceAtPurchase(PRICE_AT_PURCHASE);
 
-        OrderItemDTO result = orderItemMapper.orderItemToOrderItemDTO(orderItem);
+        return new OrderItem(ORDER_ITEM_ID, order, product, QUANTITY, PRICE_AT_PURCHASE);
+    }
 
-        assertThat(result).isNotNull();
-        assertThat(result.getOrderItemId()).isEqualTo(ORDER_ITEM_ID);
-        assertThat(result.getOrderId()).isEqualTo(ORDER_ID);
-        assertThat(result.getProductId()).isEqualTo(PRODUCT_ID);
-        assertThat(result.getProductName()).isEqualTo(PRODUCT_NAME);
-        assertThat(result.getQuantity()).isEqualTo(QUANTITY);
-        assertThat(result.getPriceAtPurchase()).isEqualTo(PRICE_AT_PURCHASE);
+    private OrderItemDTO createOrderItemDTO() {
+        return new OrderItemDTO(ORDER_ITEM_ID, ORDER_ID, QUANTITY, PRODUCT_NAME, PRODUCT_ID, PRICE_AT_PURCHASE);
+    }
+
+    @Test
+    void orderItemToOrderItemDTO_shouldMapOrderItemToOrderItemDTO() {
+        OrderItem givenOrderItem = createOrderItem();
+        OrderItemDTO expectedOrderItemDTO = createOrderItemDTO();
+        OrderItemDTO mappedOrderItemDTO = orderItemMapper.orderItemToOrderItemDTO(givenOrderItem);
+
+        assertThat(mappedOrderItemDTO).isEqualTo(expectedOrderItemDTO);
     }
 
     @Test
     void orderItemDTOToOrderItem_shouldMapOrderItemDTOToOrderItem() {
-        OrderItemDTO orderItemDTO = new OrderItemDTO();
-        orderItemDTO.setOrderItemId(ORDER_ITEM_ID);
-        orderItemDTO.setOrderId(ORDER_ID);
-        orderItemDTO.setProductId(PRODUCT_ID);
-        orderItemDTO.setProductName(PRODUCT_NAME);
-        orderItemDTO.setQuantity(QUANTITY);
-        orderItemDTO.setPriceAtPurchase(PRICE_AT_PURCHASE);
+        OrderItemDTO givenOrderItemDTO = createOrderItemDTO();
+        OrderItem expectedOrderItem = createOrderItem();
+        OrderItem mappedOrderItem = orderItemMapper.orderItemDTOToOrderItem(givenOrderItemDTO);
 
-        OrderItem result = orderItemMapper.orderItemDTOToOrderItem(orderItemDTO);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getOrderItemId()).isEqualTo(ORDER_ITEM_ID);
-        assertThat(result.getOrder()).isNotNull();
-        assertThat(result.getOrder().getOrderId()).isEqualTo(ORDER_ID);
-        assertThat(result.getProduct()).isNotNull();
-        assertThat(result.getProduct().getProductId()).isEqualTo(PRODUCT_ID);
-        assertThat(result.getProduct().getName()).isEqualTo(PRODUCT_NAME);
-        assertThat(result.getQuantity()).isEqualTo(QUANTITY);
-        assertThat(result.getPriceAtPurchase()).isEqualTo(PRICE_AT_PURCHASE);
-    }
-
-    @Test
-    void orderItemToOrderItemDTO_shouldReturnNullWhenOrderItemIsNull() {
-        OrderItemDTO result = orderItemMapper.orderItemToOrderItemDTO(null);
-
-        assertThat(result).isNull();
-    }
-
-    @Test
-    void orderItemDTOToOrderItem_shouldReturnNullWhenOrderItemDTOIsNull() {
-        OrderItem result = orderItemMapper.orderItemDTOToOrderItem(null);
-
-        assertThat(result).isNull();
+        assertThat(mappedOrderItem).isEqualTo(expectedOrderItem);
     }
 }

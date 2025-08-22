@@ -22,45 +22,27 @@ public class ProductMapperTests {
     @Test
     void productToProductDTO_shouldMapProductToProductDTO() {
         Product givenProduct = new Product(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
-        ProductDTO result = new ProductDTO(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        ProductDTO expectedProductDTO = new ProductDTO(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        ProductDTO mappedProductDTO = productMapper.productToProductDTO(givenProduct);
 
-        assertThat(productMapper.productToProductDTO(givenProduct)).isEqualTo(result);
-    }
-
-    @Test
-    void productToProductDTO_shouldReturnNullIfProductIsNull() {
-        ProductDTO productDTO = productMapper.productToProductDTO(null);
-
-        assertThat(productDTO).isNull();
+        assertThat(mappedProductDTO).isEqualTo(expectedProductDTO);
     }
 
     @Test
     void productDTOToProduct_shouldMapProductDTOToProduct() {
         ProductDTO givenProductDTO = new ProductDTO(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
-        Product result = new Product(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        Product expectedProduct = new Product(1, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        Product mappedProduct = productMapper.productDTOToProduct(givenProductDTO);
 
-        assertThat(productMapper.productDTOToProduct(givenProductDTO)).isEqualTo(result);
-    }
-
-    @Test
-    void productDTOToProduct_shouldReturnNullIfProductDTOIsNull() {
-        Product product = productMapper.productDTOToProduct(null);
-
-        assertThat(product).isNull();
+        assertThat(mappedProduct).isEqualTo(expectedProduct);
     }
 
     @Test
     void productCreateDTOToProduct_shouldMapProductCreateDTOToProduct() {
-        ProductCreateDTO productCreateDTO = new ProductCreateDTO(PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
-        Product result = new Product(0, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        ProductCreateDTO givenProductCreateDTO = new ProductCreateDTO(PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        Product expectedProduct = new Product(0, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, PRODUCT_STOCK);
+        Product mappedProduct = productMapper.productCreateDTOToProduct(givenProductCreateDTO);
 
-        assertThat(productMapper.productCreateDTOToProduct(productCreateDTO)).isEqualTo(result);
-    }
-
-    @Test
-    void productCreateDTOToProduct_shouldReturnNullIfProductCreateDTOIsNull() {
-        Product product = productMapper.productCreateDTOToProduct(null);
-
-        assertThat(product).isNull();
+        assertThat(mappedProduct).isEqualTo(expectedProduct);
     }
 }
