@@ -9,7 +9,11 @@ import com.szymonfluder.shop.entity.*;
 import com.szymonfluder.shop.mapper.OrderItemMapper;
 import com.szymonfluder.shop.mapper.OrderMapper;
 import com.szymonfluder.shop.repository.*;
-import com.szymonfluder.shop.service.*;
+import com.szymonfluder.shop.service.CartItemService;
+import com.szymonfluder.shop.service.CartService;
+import com.szymonfluder.shop.service.OrderService;
+import com.szymonfluder.shop.service.ProductService;
+import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -179,7 +183,7 @@ public class OrderServiceImpl implements OrderService {
     private Map<ProductDTO, CartItemDTO> mapProductsDTOsToCartItemDTOs(List<CartItemDTO> cartItemDTOList) {
 
         List<Integer> cartItemProductIds = extractProductIdsFromCartItemDTOList(cartItemDTOList);
-        List<ProductDTO> productDTOList = productService.getProdutsByIdList(cartItemProductIds);
+        List<ProductDTO> productDTOList = productService.getProductsByIdList(cartItemProductIds);
 
         Map<Integer, CartItemDTO> cartItemByProductId = new HashMap<>();
         for (CartItemDTO cartItemDTO : cartItemDTOList) {

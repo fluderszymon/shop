@@ -36,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDTO> getProdutsByIdList(List<Integer> idList) {
+    public List<ProductDTO> getProductsByIdList(List<Integer> idList) {
         List<Product> products = productRepository.findAllById(idList);
         return products
                 .stream()
@@ -46,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(int productId) {
-        Product foundProduct = productRepository.findById(productId).orElse(new Product());
+        Product foundProduct = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product with id: " + productId + " does not exist"));
         return productMapper.productToProductDTO(foundProduct);
     }
 
@@ -71,6 +71,8 @@ public class ProductServiceImpl implements ProductService {
             updatedProduct.setDescription(product.getDescription());
             updatedProduct.setPrice(product.getPrice());
             updatedProduct.setStock(product.getStock());
+        } else {
+            throw new RuntimeException("Product with id: " + product.getProductId() + " does not exist");
         }
         return productRepository.save(updatedProduct);
     }

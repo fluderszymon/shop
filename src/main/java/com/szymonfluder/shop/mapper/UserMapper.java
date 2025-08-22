@@ -11,13 +11,13 @@ import org.mapstruct.factory.Mappers;
 public interface UserMapper {
     UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    UserRegisterDTO userToUserRegisterDTO(User user);
+    @Mapping(target = "userId", ignore = true)
+    @Mapping(target = "balance", ignore = true)
+    @Mapping(target = "cart", ignore = true)
+    @Mapping(target = "role", ignore = true)
     User userRegisterDTOToUser(UserRegisterDTO userRegisterDTO);
 
     @Mapping(source="cart.cartId", target="cartId")
     UserDTO userToUserDTO(User user);
-
-    @Mapping(source="cartId", target="cart.cartId")
-    User userDTOToUser(UserDTO userDTO);
 
 }
