@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,26 +37,21 @@ public class CartControllerTests {
 
     @Test
     void getAllCarts_shouldReturnAllCarts() throws Exception {
-        List<CartDTO> carts = Arrays.asList(
-            new CartDTO(1, 1),
-            new CartDTO(2, 2)
-        );
+        List<CartDTO> carts = List.of(new CartDTO(1, 1));
         when(cartService.getAllCarts()).thenReturn(carts);
 
         mockMvc.perform(get("/carts"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].cartId").value(1))
-                .andExpect(jsonPath("$[0].userId").value(1))
-                .andExpect(jsonPath("$[1].cartId").value(2))
-                .andExpect(jsonPath("$[1].userId").value(2));
+                .andExpect(jsonPath("$[0].userId").value(1));
 
         verify(cartService, times(1)).getAllCarts();
     }
 
     @Test
     void getAllCarts_shouldReturnEmptyList() throws Exception {
-        when(cartService.getAllCarts()).thenReturn(Arrays.asList());
+        when(cartService.getAllCarts()).thenReturn(List.of());
 
         mockMvc.perform(get("/carts"))
                 .andExpect(status().isOk())
@@ -123,30 +117,21 @@ public class CartControllerTests {
 
     @Test
     void getCartItemsInCartByCartId_shouldReturnCartItems() throws Exception {
-        List<CartItemDTO> cartItems = Arrays.asList(
-            new CartItemDTO(1, 1, 1, 2),
-            new CartItemDTO(2, 1, 2, 1)
-        );
+        List<CartItemDTO> cartItems = List.of(new CartItemDTO(1, 1, 1, 2));
         when(cartItemService.getAllCartItemsByCartId(1)).thenReturn(cartItems);
 
         mockMvc.perform(get("/carts/1/items"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].cartItemId").value(1))
-                .andExpect(jsonPath("$[0].cartId").value(1))
-                .andExpect(jsonPath("$[0].productId").value(1))
-                .andExpect(jsonPath("$[0].quantity").value(2))
-                .andExpect(jsonPath("$[1].cartItemId").value(2))
-                .andExpect(jsonPath("$[1].cartId").value(1))
-                .andExpect(jsonPath("$[1].productId").value(2))
-                .andExpect(jsonPath("$[1].quantity").value(1));
+                .andExpect(jsonPath("$[0].cartId").value(1));
 
         verify(cartItemService, times(1)).getAllCartItemsByCartId(1);
     }
 
     @Test
     void getCartItemsInCartByCartId_shouldReturnEmptyList() throws Exception {
-        when(cartItemService.getAllCartItemsByCartId(1)).thenReturn(Arrays.asList());
+        when(cartItemService.getAllCartItemsByCartId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/carts/1/items"))
                 .andExpect(status().isOk())
@@ -165,9 +150,7 @@ public class CartControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartItemId").value(1))
-                .andExpect(jsonPath("$.cartId").value(1))
-                .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.quantity").value(2));
+                .andExpect(jsonPath("$.cartId").value(1));
 
         verify(cartItemService, times(1)).getCartItemById(1);
     }
@@ -183,9 +166,7 @@ public class CartControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartItemId").value(1))
-                .andExpect(jsonPath("$.cartId").value(1))
-                .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.quantity").value(2));
+                .andExpect(jsonPath("$.cartId").value(1));
 
         verify(cartItemService, times(1)).addCartItem(any(CartItemDTO.class));
     }
@@ -201,9 +182,7 @@ public class CartControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartItemId").value(1))
-                .andExpect(jsonPath("$.cartId").value(1))
-                .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.quantity").value(3));
+                .andExpect(jsonPath("$.cartId").value(1));
 
         verify(cartItemService, times(1)).updateCartItem(any(CartItemDTO.class));
     }

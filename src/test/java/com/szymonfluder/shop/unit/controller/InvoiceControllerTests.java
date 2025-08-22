@@ -14,7 +14,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,22 +30,15 @@ public class InvoiceControllerTests {
     @MockitoBean
     private InvoiceService invoiceService;
 
+    private InvoiceDTO provideInvoiceDTO() {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 20.00));
+        return new InvoiceDTO("INV-001", LocalDate.now(), orderItems, 40.00, "John Doe", "123 Main St");
+    }
+
     @Test
     void generateInvoicePdf_shouldReturnPdfFile() throws Exception {
         int orderId = 1;
-        List<OrderItemDTO> orderItems = Arrays.asList(
-            new OrderItemDTO(1, orderId, 2, "Product 1", 1, 19.99),
-            new OrderItemDTO(2, orderId, 1, "Product 2", 2, 29.99)
-        );
-        
-        InvoiceDTO invoiceDTO = new InvoiceDTO(
-            "INV-001", 
-            LocalDate.now(), 
-            orderItems, 
-            69.97, 
-            "John Doe", 
-            "123 Main St"
-        );
+        InvoiceDTO invoiceDTO = provideInvoiceDTO();
         
         ByteArrayOutputStream pdfStream = new ByteArrayOutputStream();
         pdfStream.write("PDF content".getBytes());
@@ -78,18 +70,7 @@ public class InvoiceControllerTests {
     @Test
     void generateInvoicePdf_shouldReturnInternalServerError_whenIOExceptionOccurs() throws Exception {
         int orderId = 1;
-        List<OrderItemDTO> orderItems = Arrays.asList(
-            new OrderItemDTO(1, orderId, 1, "Product 1", 1, 19.99)
-        );
-        
-        InvoiceDTO invoiceDTO = new InvoiceDTO(
-            "INV-002", 
-            LocalDate.now(), 
-            orderItems, 
-            19.99, 
-            "Jane Smith", 
-            "456 Oak Ave"
-        );
+        InvoiceDTO invoiceDTO = provideInvoiceDTO();
         
         when(invoiceService.createInvoiceDTO(orderId)).thenReturn(invoiceDTO);
         when(invoiceService.generateInvoicePdf(any(InvoiceDTO.class)))

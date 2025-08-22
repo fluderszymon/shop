@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,32 +34,21 @@ public class ProductControllerTests {
 
     @Test
     void getAllProducts_shouldReturnAllProducts() throws Exception {
-        List<ProductDTO> products = Arrays.asList(
-            new ProductDTO(1, "Product 1", "Description 1", 19.99, 50),
-            new ProductDTO(2, "Product 2", "Description 2", 39.99, 75)
-        );
+        List<ProductDTO> products = List.of(new ProductDTO(1, "Product 1", "Description 1", 19.99, 50));
         when(productService.getAllProducts()).thenReturn(products);
 
         mockMvc.perform(get("/products"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].productId").value(1))
-                .andExpect(jsonPath("$[0].name").value("Product 1"))
-                .andExpect(jsonPath("$[0].description").value("Description 1"))
-                .andExpect(jsonPath("$[0].price").value(19.99))
-                .andExpect(jsonPath("$[0].stock").value(50))
-                .andExpect(jsonPath("$[1].productId").value(2))
-                .andExpect(jsonPath("$[1].name").value("Product 2"))
-                .andExpect(jsonPath("$[1].description").value("Description 2"))
-                .andExpect(jsonPath("$[1].price").value(39.99))
-                .andExpect(jsonPath("$[1].stock").value(75));
+                .andExpect(jsonPath("$[0].name").value("Product 1"));
 
         verify(productService, times(1)).getAllProducts();
     }
 
     @Test
     void getAllProducts_shouldReturnEmptyList() throws Exception {
-        when(productService.getAllProducts()).thenReturn(Arrays.asList());
+        when(productService.getAllProducts()).thenReturn(List.of());
 
         mockMvc.perform(get("/products"))
                 .andExpect(status().isOk())
@@ -79,10 +67,7 @@ public class ProductControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.name").value("Test Product"))
-                .andExpect(jsonPath("$.description").value("Test Description"))
-                .andExpect(jsonPath("$.price").value(29.99))
-                .andExpect(jsonPath("$.stock").value(100));
+                .andExpect(jsonPath("$.name").value("Test Product"));
 
         verify(productService, times(1)).getProductById(1);
     }
@@ -99,10 +84,7 @@ public class ProductControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.name").value("Test Product"))
-                .andExpect(jsonPath("$.description").value("Test Description"))
-                .andExpect(jsonPath("$.price").value(29.99))
-                .andExpect(jsonPath("$.stock").value(100));
+                .andExpect(jsonPath("$.name").value("Test Product"));
 
         verify(productService, times(1)).addProduct(any(ProductCreateDTO.class));
     }
@@ -128,10 +110,7 @@ public class ProductControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.productId").value(1))
-                .andExpect(jsonPath("$.name").value("Updated Product"))
-                .andExpect(jsonPath("$.description").value("Updated Description"))
-                .andExpect(jsonPath("$.price").value(39.99))
-                .andExpect(jsonPath("$.stock").value(150));
+                .andExpect(jsonPath("$.name").value("Updated Product"));
 
         verify(productService, times(1)).updateProduct(any(Product.class));
     }

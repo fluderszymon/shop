@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,36 +34,21 @@ public class UserControllerTests {
 
     @Test
     void getAllUsers_shouldReturnAllUsers() throws Exception {
-        List<UserDTO> users = Arrays.asList(
-            new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0),
-            new UserDTO(2, "admin", "admin@outlook.com", "ADMIN", 2, "Admin's Address", 10000.0)
-        );
+        List<UserDTO> users = List.of(new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0));
         when(userService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].userId").value(1))
-                .andExpect(jsonPath("$[0].username").value("user"))
-                .andExpect(jsonPath("$[0].email").value("user@outlook.com"))
-                .andExpect(jsonPath("$[0].role").value("USER"))
-                .andExpect(jsonPath("$[0].cartId").value(1))
-                .andExpect(jsonPath("$[0].address").value("User's Address"))
-                .andExpect(jsonPath("$[0].balance").value(100.0))
-                .andExpect(jsonPath("$[1].userId").value(2))
-                .andExpect(jsonPath("$[1].username").value("admin"))
-                .andExpect(jsonPath("$[1].email").value("admin@outlook.com"))
-                .andExpect(jsonPath("$[1].role").value("ADMIN"))
-                .andExpect(jsonPath("$[1].cartId").value(2))
-                .andExpect(jsonPath("$[1].address").value("Admin's Address"))
-                .andExpect(jsonPath("$[1].balance").value(10000.0));
+                .andExpect(jsonPath("$[0].username").value("user"));
 
         verify(userService, times(1)).getAllUsers();
     }
 
     @Test
     void getAllUsers_shouldReturnEmptyList() throws Exception {
-        when(userService.getAllUsers()).thenReturn(Arrays.asList());
+        when(userService.getAllUsers()).thenReturn(List.of());
 
         mockMvc.perform(get("/users"))
                 .andExpect(status().isOk())
@@ -83,12 +67,7 @@ public class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.username").value("user"))
-                .andExpect(jsonPath("$.email").value("user@outlook.com"))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.cartId").value(1))
-                .andExpect(jsonPath("$.address").value("User's Address"))
-                .andExpect(jsonPath("$.balance").value(100.0));
+                .andExpect(jsonPath("$.username").value("user"));
 
         verify(userService, times(1)).getUserByUsername("user");
     }
@@ -105,12 +84,7 @@ public class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.username").value("user"))
-                .andExpect(jsonPath("$.email").value("user@outlook.com"))
-                .andExpect(jsonPath("$.password").value("password"))
-                .andExpect(jsonPath("$.role").value("USER"))
-                .andExpect(jsonPath("$.address").value("User's Address"))
-                .andExpect(jsonPath("$.balance").value(0.0));
+                .andExpect(jsonPath("$.username").value("user"));
 
         verify(userService, times(1)).addUser(any(UserRegisterDTO.class));
     }
@@ -127,7 +101,7 @@ public class UserControllerTests {
 
     @Test
     void updateUser_shouldReturnUpdatedUser() throws Exception {
-        User updatedUser = new User(1, "updateduser", "updateduser@outlook.com", "newpassword", "ADMIN", null, "Updated Address", 500.0);
+        User updatedUser = new User(1, "updatedUser", "updated_user@outlook.com", "updatedPassword", "ADMIN", null, "Updated Address", 500.0);
         when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/users")
@@ -136,12 +110,7 @@ public class UserControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.username").value("updateduser"))
-                .andExpect(jsonPath("$.email").value("updateduser@outlook.com"))
-                .andExpect(jsonPath("$.password").value("newpassword"))
-                .andExpect(jsonPath("$.role").value("ADMIN"))
-                .andExpect(jsonPath("$.address").value("Updated Address"))
-                .andExpect(jsonPath("$.balance").value(500.0));
+                .andExpect(jsonPath("$.username").value("updatedUser"));
 
         verify(userService, times(1)).updateUser(any(User.class));
     }

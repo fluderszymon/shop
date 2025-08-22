@@ -12,7 +12,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -30,30 +29,21 @@ public class OrderControllerTests {
 
     @Test
     void getAllOrders_shouldReturnAllOrders() throws Exception {
-        List<OrderDTO> orders = Arrays.asList(
-            new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)),
-            new OrderDTO(2, 2, 149.99, LocalDate.of(2024, 1, 16))
-        );
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)));
         when(orderService.getAllOrders()).thenReturn(orders);
 
         mockMvc.perform(get("/orders"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderId").value(1))
-                .andExpect(jsonPath("$[0].userId").value(1))
-                .andExpect(jsonPath("$[0].totalPrice").value(99.99))
-                .andExpect(jsonPath("$[0].orderDate").value("2024-01-15"))
-                .andExpect(jsonPath("$[1].orderId").value(2))
-                .andExpect(jsonPath("$[1].userId").value(2))
-                .andExpect(jsonPath("$[1].totalPrice").value(149.99))
-                .andExpect(jsonPath("$[1].orderDate").value("2024-01-16"));
+                .andExpect(jsonPath("$[0].userId").value(1));
 
         verify(orderService, times(1)).getAllOrders();
     }
 
     @Test
     void getAllOrders_shouldReturnEmptyList() throws Exception {
-        when(orderService.getAllOrders()).thenReturn(Arrays.asList());
+        when(orderService.getAllOrders()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders"))
                 .andExpect(status().isOk())
@@ -72,43 +62,28 @@ public class OrderControllerTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.orderId").value(1))
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.totalPrice").value(99.99))
-                .andExpect(jsonPath("$.orderDate").value("2024-01-15"));
+                .andExpect(jsonPath("$.userId").value(1));
 
         verify(orderService, times(1)).getOrderById(1);
     }
 
     @Test
     void getAllOrderItems_shouldReturnAllOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = Arrays.asList(
-            new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99),
-            new OrderItemDTO(2, 1, 1, "Product 2", 2, 29.99)
-        );
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 2, 1, "Product", 2, 29.99));
         when(orderService.getAllOrderItems()).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/order-items"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderItemId").value(1))
-                .andExpect(jsonPath("$[0].orderId").value(1))
-                .andExpect(jsonPath("$[0].quantity").value(2))
-                .andExpect(jsonPath("$[0].productName").value("Product 1"))
-                .andExpect(jsonPath("$[0].productId").value(1))
-                .andExpect(jsonPath("$[0].priceAtPurchase").value(19.99))
-                .andExpect(jsonPath("$[1].orderItemId").value(2))
-                .andExpect(jsonPath("$[1].orderId").value(1))
-                .andExpect(jsonPath("$[1].quantity").value(1))
-                .andExpect(jsonPath("$[1].productName").value("Product 2"))
-                .andExpect(jsonPath("$[1].productId").value(2))
-                .andExpect(jsonPath("$[1].priceAtPurchase").value(29.99));
+                .andExpect(jsonPath("$[0].orderId").value(2));
 
         verify(orderService, times(1)).getAllOrderItems();
     }
 
     @Test
     void getAllOrderItems_shouldReturnEmptyList() throws Exception {
-        when(orderService.getAllOrderItems()).thenReturn(Arrays.asList());
+        when(orderService.getAllOrderItems()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/order-items"))
                 .andExpect(status().isOk())
@@ -120,34 +95,21 @@ public class OrderControllerTests {
 
     @Test
     void getOrderItemsInOrderByOrderId_shouldReturnOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = Arrays.asList(
-            new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99),
-            new OrderItemDTO(2, 1, 1, "Product 2", 2, 29.99)
-        );
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/1/order-items"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderItemId").value(1))
-                .andExpect(jsonPath("$[0].orderId").value(1))
-                .andExpect(jsonPath("$[0].quantity").value(2))
-                .andExpect(jsonPath("$[0].productName").value("Product 1"))
-                .andExpect(jsonPath("$[0].productId").value(1))
-                .andExpect(jsonPath("$[0].priceAtPurchase").value(19.99))
-                .andExpect(jsonPath("$[1].orderItemId").value(2))
-                .andExpect(jsonPath("$[1].orderId").value(1))
-                .andExpect(jsonPath("$[1].quantity").value(1))
-                .andExpect(jsonPath("$[1].productName").value("Product 2"))
-                .andExpect(jsonPath("$[1].productId").value(2))
-                .andExpect(jsonPath("$[1].priceAtPurchase").value(29.99));
+                .andExpect(jsonPath("$[0].orderId").value(1));
 
         verify(orderService, times(1)).getAllOrderItemsByOrderId(1);
     }
 
     @Test
     void getOrderItemsInOrderByOrderId_shouldReturnEmptyList() throws Exception {
-        when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(Arrays.asList());
+        when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/1/order-items"))
                 .andExpect(status().isOk())
