@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductServiceImplTest {
+class ProductServiceImplTests {
 
     private static final int PRODUCT_ID = 1;
     private static final String PRODUCT_NAME = "Test Product";
