@@ -33,6 +33,10 @@ public class UserServiceImplTests {
         return userService.addUser(userRegisterDTO);
     }
 
+    private UserDTO prepareMockUserDTO(int userId) {
+        return new UserDTO(userId, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
+    }
+
     @Test
     void getAllUsers_shouldReturnEmptyList() {
         List<UserDTO> users = userService.getAllUsers();
@@ -43,8 +47,8 @@ public class UserServiceImplTests {
     void getAllUsers_shouldReturnAllUserDTOs() {
         User addedUser = addUserToDatabase();
         List<UserDTO> userDTOList = userService.getAllUsers();
-        UserDTO expectedUserDTO = new UserDTO(addedUser.getUserId(), "User", "user@outlook.com", "USER", -1, "Address", 0.00);
-        
+        UserDTO expectedUserDTO = prepareMockUserDTO(addedUser.getUserId());
+
         assertThat(userDTOList.size()).isEqualTo(1);
         assertThat(userDTOList.contains(expectedUserDTO)).isTrue();
     }
@@ -53,7 +57,7 @@ public class UserServiceImplTests {
     void getUserByUsername_shouldReturnUserDTO() {
         User addedUser = addUserToDatabase();
         UserDTO userDTO = userService.getUserByUsername(addedUser.getUsername());
-        UserDTO expectedUserDTO = new UserDTO(addedUser.getUserId(), "User", "user@outlook.com", "USER", -1, "Address", 0.00);
+        UserDTO expectedUserDTO = prepareMockUserDTO(addedUser.getUserId());
 
         assertThat(userDTO).isEqualTo(expectedUserDTO);
     }
