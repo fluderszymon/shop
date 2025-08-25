@@ -1,9 +1,9 @@
 package com.szymonfluder.shop.integration.service;
 
 import com.szymonfluder.shop.dto.*;
+import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.*;
-import com.szymonfluder.shop.service.impl.CartItemServiceImpl;
 import com.szymonfluder.shop.service.impl.CartServiceImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
-@Import({CartServiceImpl.class, CartMapperImpl.class, CartItemServiceImpl.class,
+@Import({CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class, ProductServiceImpl.class, ProductMapperImpl.class,
         UserServiceImpl.class, UserMapperImpl.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
@@ -27,9 +27,6 @@ public class CartServiceImplTests {
 
     @Autowired
     private CartServiceImpl cartService;
-
-    @Autowired
-    private CartItemServiceImpl cartItemService;
 
     @Autowired
     private ProductServiceImpl productService;
@@ -124,10 +121,106 @@ public class CartServiceImplTests {
         productService.addProduct(product2);
         CartItemDTO cartItem1 = new CartItemDTO(0, 1, 1, 2);
         CartItemDTO cartItem2 = new CartItemDTO(0, 1, 2, 1);
-        cartItemService.addCartItem(cartItem1);
-        cartItemService.addCartItem(cartItem2);
+        cartService.addCartItem(cartItem1);
+        cartService.addCartItem(cartItem2);
 
         double cartTotal = cartService.getCartTotal(cartId);
         assertThat(cartTotal).isEqualTo(35.0);
+    }
+
+    private CartItemDTO addCartItemToDatabase() {
+        User addedUser = userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        CartDTO cartDTO = cartService.addCart(addedUser.getUserId());
+        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
+        return cartService.addCartItem(new CartItemDTO(0, cartDTO.getCartId(), product.getProductId(), 10));
+    }
+
+    private CartItemDTO getCartItemDTOMock() {
+        return new CartItemDTO(1, 1, 1, 10);
+    }
+
+    @Test
+    void getAllCartItems_shouldReturnAllCartItemDTOs() {
+        addCartItemToDatabase();
+        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItems();
+        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTOMock());
+
+        assertThat(actualCartItemDTOList).isEqualTo(expectedCartItemDTOList);
+    }
+
+    @Test
+    void getAllCartItems_shouldReturnEmptyList() {
+        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItems();
+        assertThat(actualCartItemDTOList.isEmpty()).isTrue();
+    }
+
+    @Test
+    void getAllCartItemsByCartId_shouldReturnAllCartItemDTOsByCartId() {
+        CartItemDTO addedCartITemDTO = addCartItemToDatabase();
+        int cartId = addedCartITemDTO.getCartId();
+        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItemsByCartId(cartId);
+        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTOMock());
+
+        assertThat(actualCartItemDTOList).isEqualTo(expectedCartItemDTOList);
+    }
+
+    @Test
+    void getAllCartItemsByCartId_shouldReturnEmptyListWhenCartHasNoItems() {
+        addCartItemToDatabase();
+        int emptyCartId = 99;
+        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItemsByCartId(emptyCartId);
+
+        assertThat(actualCartItemDTOList.isEmpty()).isTrue();
+    }
+
+    @Test
+    void getCartItemById_shouldReturnCartItemDTO() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        int cartItemId = addedCartItemDTO.getCartId();
+        CartItemDTO actualCartItemDTO = cartService.getCartItemById(cartItemId);
+        CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
+
+        assertThat(actualCartItemDTO).isEqualTo(expectedCartItemDTO);
+    }
+
+    @Test
+    void getCartItemById_shouldThrowExceptionWhenCartItemNotFound() {
+        int nonExistingCartItemId = 1;
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.getCartItemById(nonExistingCartItemId));
+
+        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+    }
+
+    @Test
+    void addCartItem_shouldAddCartItem() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
+
+        assertThat(addedCartItemDTO).isEqualTo(expectedCartItemDTO);
+    }
+
+    @Test
+    void deleteCartItemById_shouldDeleteCartItem() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        int cartItemId = addedCartItemDTO.getCartId();
+        assertThat(cartService.getCartItemById(cartItemId)).isNotNull();
+
+        cartService.deleteCartItemById(cartItemId);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.getCartItemById(cartItemId));
+        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+    }
+
+    @Test
+    void updateCartItem_shouldUpdateCartItem() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
+
+        CartItemDTO updatedCartItemDTO = cartService.updateCartItem(cartItemDTOPassedToUpdateMethod);
+
+        assertThat(updatedCartItemDTO).isEqualTo(cartItemDTOPassedToUpdateMethod);
     }
 }

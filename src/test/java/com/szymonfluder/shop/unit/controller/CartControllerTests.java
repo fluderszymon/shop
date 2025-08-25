@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.szymonfluder.shop.controller.CartController;
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,9 +27,6 @@ public class CartControllerTests {
 
     @MockitoBean
     private CartService cartService;
-
-    @MockitoBean
-    private CartItemService cartItemService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -118,7 +114,7 @@ public class CartControllerTests {
     @Test
     void getCartItemsInCartByCartId_shouldReturnCartItems() throws Exception {
         List<CartItemDTO> cartItems = List.of(new CartItemDTO(1, 1, 1, 2));
-        when(cartItemService.getAllCartItemsByCartId(1)).thenReturn(cartItems);
+        when(cartService.getAllCartItemsByCartId(1)).thenReturn(cartItems);
 
         mockMvc.perform(get("/carts/1/items"))
                 .andExpect(status().isOk())
@@ -126,25 +122,25 @@ public class CartControllerTests {
                 .andExpect(jsonPath("$[0].cartItemId").value(1))
                 .andExpect(jsonPath("$[0].cartId").value(1));
 
-        verify(cartItemService, times(1)).getAllCartItemsByCartId(1);
+        verify(cartService, times(1)).getAllCartItemsByCartId(1);
     }
 
     @Test
     void getCartItemsInCartByCartId_shouldReturnEmptyList() throws Exception {
-        when(cartItemService.getAllCartItemsByCartId(1)).thenReturn(List.of());
+        when(cartService.getAllCartItemsByCartId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/carts/1/items"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
 
-        verify(cartItemService, times(1)).getAllCartItemsByCartId(1);
+        verify(cartService, times(1)).getAllCartItemsByCartId(1);
     }
 
     @Test
     void getCartItemById_shouldReturnCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 2);
-        when(cartItemService.getCartItemById(1)).thenReturn(cartItemDTO);
+        when(cartService.getCartItemById(1)).thenReturn(cartItemDTO);
 
         mockMvc.perform(get("/carts/items/1"))
                 .andExpect(status().isOk())
@@ -152,13 +148,13 @@ public class CartControllerTests {
                 .andExpect(jsonPath("$.cartItemId").value(1))
                 .andExpect(jsonPath("$.cartId").value(1));
 
-        verify(cartItemService, times(1)).getCartItemById(1);
+        verify(cartService, times(1)).getCartItemById(1);
     }
 
     @Test
     void addCartItem_shouldReturnCreatedCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 2);
-        when(cartItemService.addCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
+        when(cartService.addCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
 
         mockMvc.perform(post("/carts/1/items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -168,13 +164,13 @@ public class CartControllerTests {
                 .andExpect(jsonPath("$.cartItemId").value(1))
                 .andExpect(jsonPath("$.cartId").value(1));
 
-        verify(cartItemService, times(1)).addCartItem(any(CartItemDTO.class));
+        verify(cartService, times(1)).addCartItem(any(CartItemDTO.class));
     }
 
     @Test
     void updateCartItem_shouldReturnUpdatedCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 3);
-        when(cartItemService.updateCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
+        when(cartService.updateCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
 
         mockMvc.perform(put("/carts/1/items/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -184,17 +180,17 @@ public class CartControllerTests {
                 .andExpect(jsonPath("$.cartItemId").value(1))
                 .andExpect(jsonPath("$.cartId").value(1));
 
-        verify(cartItemService, times(1)).updateCartItem(any(CartItemDTO.class));
+        verify(cartService, times(1)).updateCartItem(any(CartItemDTO.class));
     }
 
     @Test
     void deleteCartItem_shouldDeleteCartItem() throws Exception {
-        doNothing().when(cartItemService).deleteCartItemById(1);
+        doNothing().when(cartService).deleteCartItemById(1);
 
         mockMvc.perform(delete("/carts/1/items/1"))
                 .andExpect(status().isOk());
 
-        verify(cartItemService, times(1)).deleteCartItemById(1);
+        verify(cartService, times(1)).deleteCartItemById(1);
     }
 
     @Test

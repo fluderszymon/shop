@@ -4,7 +4,6 @@ import com.szymonfluder.shop.dto.*;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.*;
-import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.impl.*;
@@ -24,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
         UserServiceImpl.class, UserMapperImpl.class,
         CartServiceImpl.class, CartMapperImpl.class,
-        CartItemServiceImpl.class, CartItemMapperImpl.class,
+        CartItemMapperImpl.class,
         ProductServiceImpl.class, ProductMapperImpl.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests {
@@ -35,8 +34,6 @@ public class OrderServiceImplTests {
     private UserServiceImpl userService;
     @Autowired
     private CartService cartService;
-    @Autowired
-    private CartItemService cartItemService;
     @Autowired
     private ProductService productService;
 
@@ -55,7 +52,7 @@ public class OrderServiceImplTests {
     }
 
     private void addCartItemToDatabase() {
-        cartItemService.addCartItem(new CartItemDTO(0, 1, 1, 10));
+        cartService.addCartItem(new CartItemDTO(0, 1, 1, 10));
     }
 
     private Product addProductToDatabase() {
