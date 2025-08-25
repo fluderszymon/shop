@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.HashMap;
@@ -31,20 +30,17 @@ public class ProductServiceImplTests {
     @Autowired
     private ProductMapperImpl productMapper;
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
     private Product addProductToDatabase() {
         ProductCreateDTO productCreateDTO = new ProductCreateDTO(
                 "Product", "Product Description", 15.50, 100);
         return productService.addProduct(productCreateDTO);
     }
 
-    private Product getProduct() {
+    private Product getProductMock() {
         return new Product(1, "Product", "Product Description", 15.50, 100);
     }
 
-    private ProductDTO getProductDTO() {
+    private ProductDTO getProductDTOMock() {
         return new ProductDTO(1, "Product", "Product Description", 15.50, 100);
     }
 
@@ -58,7 +54,7 @@ public class ProductServiceImplTests {
     void getAllProducts_shouldReturnAllProductDTOs() {
         addProductToDatabase();
         List<ProductDTO> actualProductDTOList = productService.getAllProducts();
-        ProductDTO expectedProductDTO = getProductDTO();
+        ProductDTO expectedProductDTO = getProductDTOMock();
 
         assertThat(actualProductDTOList.contains(expectedProductDTO)).isTrue();
     }
@@ -78,7 +74,7 @@ public class ProductServiceImplTests {
         List<Integer> existingIdList = List.of(addedProduct.getProductId());
 
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(existingIdList);
-        ProductDTO expectedProductDTO = getProductDTO();
+        ProductDTO expectedProductDTO = getProductDTOMock();
 
         assertThat(actualProductDTOList.contains(expectedProductDTO)).isTrue();
     }
@@ -94,7 +90,7 @@ public class ProductServiceImplTests {
     void getProductById_shouldReturnProductDTO() {
         Product addedProduct = addProductToDatabase();
         ProductDTO actualProductDTO = productService.getProductById(addedProduct.getProductId());
-        ProductDTO expectedProductDTO = getProductDTO();
+        ProductDTO expectedProductDTO = getProductDTOMock();
 
         assertThat(actualProductDTO).isEqualTo(expectedProductDTO);
     }
@@ -112,7 +108,7 @@ public class ProductServiceImplTests {
     @Test
     void addProduct_shouldReturnAddedProduct() {
         Product addedProduct = addProductToDatabase();
-        Product expectedProduct = getProduct();
+        Product expectedProduct = getProductMock();
 
         assertThat(addedProduct).isEqualTo(expectedProduct);
     }

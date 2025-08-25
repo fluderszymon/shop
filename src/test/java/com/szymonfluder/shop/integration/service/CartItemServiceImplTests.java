@@ -49,7 +49,7 @@ public class CartItemServiceImplTests {
         return cartItemService.addCartItem(new CartItemDTO(0, cartDTO.getCartId(), product.getProductId(), 10));
     }
 
-    private CartItemDTO getCartItemDTO() {
+    private CartItemDTO getCartItemDTOMock() {
         return new CartItemDTO(1, 1, 1, 10);
     }
 
@@ -57,7 +57,7 @@ public class CartItemServiceImplTests {
     void getAllCartItems_shouldReturnAllCartItemDTOs() {
         addCartItemToDatabase();
         List<CartItemDTO> actualCartItemDTOList = cartItemService.getAllCartItems();
-        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTO());
+        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTOMock());
 
         assertThat(actualCartItemDTOList).isEqualTo(expectedCartItemDTOList);
     }
@@ -73,15 +73,15 @@ public class CartItemServiceImplTests {
         CartItemDTO addedCartITemDTO = addCartItemToDatabase();
         int cartId = addedCartITemDTO.getCartId();
         List<CartItemDTO> actualCartItemDTOList = cartItemService.getAllCartItemsByCartId(cartId);
-        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTO());
+        List<CartItemDTO> expectedCartItemDTOList = List.of(getCartItemDTOMock());
 
         assertThat(actualCartItemDTOList).isEqualTo(expectedCartItemDTOList);
     }
 
     @Test
     void getAllCartItemsByCartId_shouldReturnEmptyListWhenCartHasNoItems() {
-        CartItemDTO addedCartITemDTO = addCartItemToDatabase();
-        int emptyCartId = (addedCartITemDTO.getCartId() + 1);
+        addCartItemToDatabase();
+        int emptyCartId = 99;
         List<CartItemDTO> actualCartItemDTOList = cartItemService.getAllCartItemsByCartId(emptyCartId);
 
         assertThat(actualCartItemDTOList.isEmpty()).isTrue();
@@ -92,7 +92,7 @@ public class CartItemServiceImplTests {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
         int cartItemId = addedCartItemDTO.getCartId();
         CartItemDTO actualCartItemDTO = cartItemService.getCartItemById(cartItemId);
-        CartItemDTO expectedCartItemDTO = getCartItemDTO();
+        CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
 
         assertThat(actualCartItemDTO).isEqualTo(expectedCartItemDTO);
     }
@@ -110,7 +110,7 @@ public class CartItemServiceImplTests {
     @Test
     void addCartItem_shouldAddCartItem() {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
-        CartItemDTO expectedCartItemDTO = getCartItemDTO();
+        CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
 
         assertThat(addedCartItemDTO).isEqualTo(expectedCartItemDTO);
     }

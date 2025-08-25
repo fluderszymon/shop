@@ -42,7 +42,7 @@ public class CartServiceImplTests {
         return cartService.addCart(addedUser.getUserId());
     }
 
-    private CartDTO getCart() {
+    private CartDTO getCartMock() {
         return new CartDTO(1, 1);
     }
 
@@ -50,7 +50,7 @@ public class CartServiceImplTests {
     void getAllCarts_shouldReturnAllCartDTOs() {
         addCartToDatabase();
         List<CartDTO> actualProductDTOList = cartService.getAllCarts();
-        List<CartDTO> expectedProductDTOList = List.of(getCart());
+        List<CartDTO> expectedProductDTOList = List.of(getCartMock());
 
         assertThat(actualProductDTOList).isEqualTo(expectedProductDTOList);
     }
@@ -65,7 +65,7 @@ public class CartServiceImplTests {
     void getCartById_shouldReturnCartDTO() {
         addCartToDatabase();
         CartDTO actualCart = cartService.getCartById(1);
-        CartDTO expectedCart = getCart();
+        CartDTO expectedCart = getCartMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
     }
@@ -84,7 +84,7 @@ public class CartServiceImplTests {
     void addCart_shouldAddCart() {
         addCartToDatabase();
         CartDTO actualCart = cartService.getCartById(1);
-        CartDTO expectedCart = getCart();
+        CartDTO expectedCart = getCartMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
     }

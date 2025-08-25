@@ -71,11 +71,11 @@ public class OrderServiceImplTests {
         orderService.checkout(addedUserDTO.getUserId(), addedCartDTO.getUserId());
     }
 
-    private OrderDTO getOrderDTO() {
+    private OrderDTO getOrderDTOMock() {
         return new OrderDTO(1, 1, 100.00, LocalDate.now());
     }
 
-    private OrderItemDTO getOrderItemDTO() {
+    private OrderItemDTO getOrderItemDTOMock() {
         return new OrderItemDTO(1, 1, 10, "Product", 1, 10.00);
     }
 
@@ -134,7 +134,7 @@ public class OrderServiceImplTests {
     void getAllOrders_shouldGetAllOrderDTOs() {
         addOrderToDatabase();
         List<OrderDTO> actualOrderDTOList = orderService.getAllOrders();
-        OrderDTO expectedOrderDTO = getOrderDTO();
+        OrderDTO expectedOrderDTO = getOrderDTOMock();
 
         assertThat(actualOrderDTOList).isEqualTo(List.of(expectedOrderDTO));
     }
@@ -143,7 +143,7 @@ public class OrderServiceImplTests {
     void getOrderById_shouldReturnOrderDTO() {
         addOrderToDatabase();
         OrderDTO actualOrderDTO = orderService.getOrderById(1);
-        OrderDTO expectedOrderDTO = getOrderDTO();
+        OrderDTO expectedOrderDTO = getOrderDTOMock();
 
         assertThat(actualOrderDTO).isEqualTo(expectedOrderDTO);
     }
@@ -159,7 +159,7 @@ public class OrderServiceImplTests {
     void getAllOrderItems_shouldGetAllOrderItemDTOs() {
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItems();
-        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTO());
+        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
         assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
     }
 
@@ -167,7 +167,7 @@ public class OrderServiceImplTests {
     void getAllOrderItemsByOrderId_shouldGetAllOrderItemDTOsByOrderId() {
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItemsByOrderId(1);
-        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTO());
+        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
         assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
     }
 }

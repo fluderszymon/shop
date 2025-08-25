@@ -30,7 +30,7 @@ public class UserServiceImplTests {
         return userService.addUser(userRegisterDTO);
     }
 
-    private UserDTO getUserDTO() {
+    private UserDTO getUserDTOMock() {
         return new UserDTO(1, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
     }
 
@@ -44,7 +44,7 @@ public class UserServiceImplTests {
     void getAllUsers_shouldReturnAllUserDTOs() {
         addUserToDatabase();
         List<UserDTO> actualUserDTOList = userService.getAllUsers();
-        UserDTO expectedUserDTO = getUserDTO();
+        UserDTO expectedUserDTO = getUserDTOMock();
 
         assertThat(actualUserDTOList.contains(expectedUserDTO)).isTrue();
     }
@@ -53,7 +53,7 @@ public class UserServiceImplTests {
     void getUserByUsername_shouldReturnUserDTO() {
         User addedUser = addUserToDatabase();
         UserDTO actualUserDTO = userService.getUserByUsername(addedUser.getUsername());
-        UserDTO expectedUserDTO = getUserDTO();
+        UserDTO expectedUserDTO = getUserDTOMock();
 
         assertThat(actualUserDTO).isEqualTo(expectedUserDTO);
     }
@@ -72,7 +72,7 @@ public class UserServiceImplTests {
     void getUserById_shouldReturnUserDTO() {
         User addedUser = addUserToDatabase();
         UserDTO actualUserDTO = userService.getUserById(addedUser.getUserId());
-        UserDTO expectedUserDTO = getUserDTO();
+        UserDTO expectedUserDTO = getUserDTOMock();
 
         assertThat(actualUserDTO).isEqualTo(expectedUserDTO);
     }

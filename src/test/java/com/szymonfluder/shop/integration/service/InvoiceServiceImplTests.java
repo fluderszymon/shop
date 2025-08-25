@@ -17,6 +17,7 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,7 +67,7 @@ public class InvoiceServiceImplTests {
         return addedOrder.getOrderId();
     }
 
-    private InvoiceDTO getInvoiceDTO() {
+    private InvoiceDTO getInvoiceDTOMock() {
         List<OrderItemDTO> orderItemDTOList = List.of(new OrderItemDTO(1, 1, 10, "Product", 1, 10.00));
         return new InvoiceDTO(("INV_" + 1), LocalDate.now(), orderItemDTOList, 100.00, "User", "Address");
     }
@@ -75,14 +76,19 @@ public class InvoiceServiceImplTests {
     void createInvoiceDTO_shouldCreateInvoiceDTO() {
         int orderId = populateDatabase();
         InvoiceDTO actualInvoiceDTO = invoiceService.createInvoiceDTO(orderId);
-        InvoiceDTO expectedInvoiceDTO = getInvoiceDTO();
+        InvoiceDTO expectedInvoiceDTO = getInvoiceDTOMock();
 
         assertThat(actualInvoiceDTO).isEqualTo(expectedInvoiceDTO);
     }
 
     @Test
     void generateInvoicePDF_shouldGenerateInvoicePDF() throws IOException {
-        ByteArrayOutputStream result = invoiceService.generateInvoicePdf(getInvoiceDTO());
+        ByteArrayOutputStream result = invoiceService.generateInvoicePdf(getInvoiceDTOMock());
+
+        byte[] pdfBytes = result.toByteArray();
+        String header = new String(pdfBytes, 0, 5, StandardCharsets.US_ASCII);
+        assertThat(header).isEqualTo("%PDF-");
+
         assertThat(result.size() > 0).isTrue();
     }
 }
