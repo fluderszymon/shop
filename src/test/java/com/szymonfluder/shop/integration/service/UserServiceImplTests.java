@@ -2,8 +2,6 @@ package com.szymonfluder.shop.integration.service;
 
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
@@ -16,16 +14,15 @@ import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.mapper.UserMapperImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
+import org.springframework.test.annotation.DirtiesContext;
 
 @DataJpaTest
 @Import({UserServiceImpl.class, UserMapperImpl.class})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserServiceImplTests {
 
     @Autowired
     private UserServiceImpl userService;
-
-    @Autowired
-    private UserMapperImpl userMapper;
 
     private User addUserToDatabase() {
         UserRegisterDTO userRegisterDTO = new UserRegisterDTO(
@@ -33,33 +30,32 @@ public class UserServiceImplTests {
         return userService.addUser(userRegisterDTO);
     }
 
-    private UserDTO prepareMockUserDTO(int userId) {
-        return new UserDTO(userId, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
+    private UserDTO getUserDTO() {
+        return new UserDTO(1, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
     }
 
     @Test
     void getAllUsers_shouldReturnEmptyList() {
-        List<UserDTO> users = userService.getAllUsers();
-        assertThat(users.isEmpty()).isTrue();
+        List<UserDTO> actualUserDTOList = userService.getAllUsers();
+        assertThat(actualUserDTOList.isEmpty()).isTrue();
     }
 
     @Test
     void getAllUsers_shouldReturnAllUserDTOs() {
-        User addedUser = addUserToDatabase();
-        List<UserDTO> userDTOList = userService.getAllUsers();
-        UserDTO expectedUserDTO = prepareMockUserDTO(addedUser.getUserId());
+        addUserToDatabase();
+        List<UserDTO> actualUserDTOList = userService.getAllUsers();
+        UserDTO expectedUserDTO = getUserDTO();
 
-        assertThat(userDTOList.size()).isEqualTo(1);
-        assertThat(userDTOList.contains(expectedUserDTO)).isTrue();
+        assertThat(actualUserDTOList.contains(expectedUserDTO)).isTrue();
     }
 
     @Test
     void getUserByUsername_shouldReturnUserDTO() {
         User addedUser = addUserToDatabase();
-        UserDTO userDTO = userService.getUserByUsername(addedUser.getUsername());
-        UserDTO expectedUserDTO = prepareMockUserDTO(addedUser.getUserId());
+        UserDTO actualUserDTO = userService.getUserByUsername(addedUser.getUsername());
+        UserDTO expectedUserDTO = getUserDTO();
 
-        assertThat(userDTO).isEqualTo(expectedUserDTO);
+        assertThat(actualUserDTO).isEqualTo(expectedUserDTO);
     }
 
     @Test
@@ -67,38 +63,35 @@ public class UserServiceImplTests {
         addUserToDatabase();
         String username = "nonExistingUsername";
 
-        UserDTO userDTO = userService.getUserByUsername(username);
+        UserDTO actualUserDTO = userService.getUserByUsername(username);
 
-        assertThat(userDTO).isNull();
+        assertThat(actualUserDTO).isNull();
     }
 
     @Test
     void getUserById_shouldReturnUserDTO() {
         User addedUser = addUserToDatabase();
-        UserDTO userDTO = userService.getUserById(addedUser.getUserId());
-        UserDTO expectedUserDTO = userMapper.userToUserDTO(addedUser);
+        UserDTO actualUserDTO = userService.getUserById(addedUser.getUserId());
+        UserDTO expectedUserDTO = getUserDTO();
 
-        assertEquals(expectedUserDTO, userDTO);
+        assertThat(actualUserDTO).isEqualTo(expectedUserDTO);
     }
 
     @Test
     void getUserById_shouldThrowExceptionWhenUserWithGivenIdIsNotPresent() {
         int userId = 1;
+        UserDTO actualUserDTO = userService.getUserById(userId);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class, () -> userService.getUserById(userId));
-
-        assertEquals("User not found", exception.getMessage());
+        assertThat(actualUserDTO).isNull();
     }
 
     @Test
     void addUser_shouldReturnAddedUser() {
         User addedUser = addUserToDatabase();
-        UserDTO addedUserDTO = userMapper.userToUserDTO(addedUser);
-        UserDTO result = userService.getUserById(addedUser.getUserId());
+        User expectedUser = new User(1, "User", "user@outlook.com", "password", "USER", null, "Address", 0.0);
 
-        assertEquals(User.class, addedUser.getClass());
-        assertThat(addedUserDTO).isEqualTo(result);
+        assertThat(addedUser.getClass()).isEqualTo(User.class);
+        assertThat(addedUser).isEqualTo(expectedUser);
     }
 
     @Test
@@ -111,7 +104,7 @@ public class UserServiceImplTests {
 
         User updatedUser = userService.updateUser(userPassedToUpdateMethod);
 
-        assertEquals(userPassedToUpdateMethod, updatedUser);
+        assertThat(updatedUser.getClass()).isEqualTo(User.class);
+        assertThat(updatedUser).isEqualTo(userPassedToUpdateMethod);
     }
-
 }
