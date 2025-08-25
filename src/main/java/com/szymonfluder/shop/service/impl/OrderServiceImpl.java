@@ -9,7 +9,6 @@ import com.szymonfluder.shop.entity.*;
 import com.szymonfluder.shop.mapper.OrderItemMapper;
 import com.szymonfluder.shop.mapper.OrderMapper;
 import com.szymonfluder.shop.repository.*;
-import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.OrderService;
 import com.szymonfluder.shop.service.ProductService;
@@ -27,7 +26,6 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final CartService cartService;
     private final ProductService productService;
-    private final CartItemService cartItemService;
     private final UserService userService;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
@@ -38,7 +36,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderServiceImpl(OrderRepository orderRepository, OrderMapper orderMapper,
                             OrderItemRepository orderItemRepository, OrderItemMapper orderItemMapper,
                             CartService cartService, ProductService productService,
-                            CartItemService cartItemService, UserService userService,
+                            UserService userService,
                             ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
@@ -46,7 +44,6 @@ public class OrderServiceImpl implements OrderService {
         this.orderItemMapper = orderItemMapper;
         this.cartService = cartService;
         this.productService = productService;
-        this.cartItemService = cartItemService;
         this.userService = userService;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
@@ -84,7 +81,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     @Override
     public void checkout(int userId, int cartId) {
-        List<CartItemDTO> cartItemDTOList = cartItemService.getAllCartItemsByCartId(cartId);
+        List<CartItemDTO> cartItemDTOList = cartService.getAllCartItemsByCartId(cartId);
         validateCartNotEmpty(cartItemDTOList);
 
         Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = mapProductsDTOsToCartItemDTOs(cartItemDTOList);
@@ -151,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
-            cartItemService.deleteCartItemById(cartItemDTO.getCartItemId());
+            cartService.deleteCartItemById(cartItemDTO.getCartItemId());
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setCart(null);
