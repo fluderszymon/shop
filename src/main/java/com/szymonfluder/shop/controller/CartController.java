@@ -2,7 +2,6 @@ package com.szymonfluder.shop.controller;
 
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.service.CartItemService;
 import com.szymonfluder.shop.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +13,10 @@ import java.util.List;
 public class CartController {
 
     private final CartService cartService;
-    private final CartItemService cartItemService;
 
     @Autowired
-    public CartController(CartService cartService, CartItemService cartItemService) {
+    public CartController(CartService cartService) {
         this.cartService = cartService;
-        this.cartItemService = cartItemService;
     }
 
     @GetMapping
@@ -49,27 +46,27 @@ public class CartController {
 
     @GetMapping("/{cartId}/items")
     public List<CartItemDTO> getCartItemsInCartByCartId(@PathVariable int cartId) {
-        return cartItemService.getAllCartItemsByCartId(cartId);
+        return cartService.getAllCartItemsByCartId(cartId);
     }
 
     @GetMapping("/items/{cartItemId}")
     public CartItemDTO getCartItemById(@PathVariable int cartItemId) {
-        return cartItemService.getCartItemById(cartItemId);
+        return cartService.getCartItemById(cartItemId);
     }
 
     @PostMapping("/{cartId}/items")
     public CartItemDTO addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartItemService.addCartItem(cartItemDTO);
+        return cartService.addCartItem(cartItemDTO);
     }
 
     @PutMapping("/{cartId}/items/{itemId}")
     public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartItemService.updateCartItem(cartItemDTO);
+        return cartService.updateCartItem(cartItemDTO);
     }
 
     @DeleteMapping("/{cartId}/items/{cartItemId}")
     public void deleteCartItem(@PathVariable int cartId, @PathVariable int cartItemId) {
-        cartItemService.deleteCartItemById(cartItemId);
+        cartService.deleteCartItemById(cartItemId);
     }
 
     @GetMapping("/{cartId}/total")
