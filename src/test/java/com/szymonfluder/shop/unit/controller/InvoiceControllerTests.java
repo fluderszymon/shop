@@ -3,17 +3,25 @@ package com.szymonfluder.shop.unit.controller;
 import com.szymonfluder.shop.controller.InvoiceController;
 import com.szymonfluder.shop.dto.InvoiceDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
+import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.SecurityConfig;
+import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.InvoiceService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -22,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(InvoiceController.class)
+@Import(SecurityConfig.class)
 public class InvoiceControllerTests {
 
     @Autowired
@@ -29,6 +38,27 @@ public class InvoiceControllerTests {
 
     @MockitoBean
     private InvoiceService invoiceService;
+
+    @MockitoBean
+    private JWTService jwtService;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
+    private final String validToken= "valid.jwt.token";
+
+    @BeforeEach
+    void setUp() {
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("username")
+                .password("password")
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
+                .build();
+
+        when(jwtService.extractUsername(validToken)).thenReturn("username");
+        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
+        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+    }
 
     private InvoiceDTO provideInvoiceDTO() {
         List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 20.00));
@@ -46,7 +76,8 @@ public class InvoiceControllerTests {
         when(invoiceService.createInvoiceDTO(orderId)).thenReturn(invoiceDTO);
         when(invoiceService.generateInvoicePdf(any(InvoiceDTO.class))).thenReturn(pdfStream);
 
-        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId))
+        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Length", "11"));
@@ -60,7 +91,8 @@ public class InvoiceControllerTests {
         int orderId = 999;
         when(invoiceService.createInvoiceDTO(orderId)).thenReturn(null);
 
-        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId))
+        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isNotFound());
 
         verify(invoiceService, times(1)).createInvoiceDTO(orderId);
@@ -76,7 +108,8 @@ public class InvoiceControllerTests {
         when(invoiceService.generateInvoicePdf(any(InvoiceDTO.class)))
             .thenThrow(new IOException("PDF generation failed"));
 
-        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId))
+        mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isInternalServerError());
 
         verify(invoiceService, times(1)).createInvoiceDTO(orderId);
@@ -85,7 +118,8 @@ public class InvoiceControllerTests {
 
     @Test
     void generateInvoicePdf_shouldHandleInvalidOrderIdFormat() throws Exception {
-        mockMvc.perform(get("/invoices/invalid/pdf"))
+        mockMvc.perform(get("/invoices/invalid/pdf")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isBadRequest());
     }
 }

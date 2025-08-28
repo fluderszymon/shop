@@ -5,14 +5,22 @@ import com.szymonfluder.shop.controller.ProductController;
 import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.SecurityConfig;
+import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.ProductService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +29,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ProductController.class)
+@Import(SecurityConfig.class)
 public class ProductControllerTests {
 
     @Autowired
@@ -29,15 +38,37 @@ public class ProductControllerTests {
     @MockitoBean
     private ProductService productService;
 
+    @MockitoBean
+    private JWTService jwtService;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    private final String validToken = "valid.jwt.token";
+
+    @BeforeEach
+    void setUp() {
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("username")
+                .password("password")
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
+                .build();
+
+        when(jwtService.extractUsername(validToken)).thenReturn("username");
+        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
+        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+    }
 
     @Test
     void getAllProducts_shouldReturnAllProducts() throws Exception {
         List<ProductDTO> products = List.of(new ProductDTO(1, "Product 1", "Description 1", 19.99, 50));
         when(productService.getAllProducts()).thenReturn(products);
 
-        mockMvc.perform(get("/products"))
+        mockMvc.perform(get("/products")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].productId").value(1))
@@ -50,7 +81,8 @@ public class ProductControllerTests {
     void getAllProducts_shouldReturnEmptyList() throws Exception {
         when(productService.getAllProducts()).thenReturn(List.of());
 
-        mockMvc.perform(get("/products"))
+        mockMvc.perform(get("/products")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -63,7 +95,8 @@ public class ProductControllerTests {
         ProductDTO productDTO = new ProductDTO(1, "Test Product", "Test Description", 29.99, 100);
         when(productService.getProductById(1)).thenReturn(productDTO);
 
-        mockMvc.perform(get("/products/1"))
+        mockMvc.perform(get("/products/1")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.productId").value(1))
@@ -79,6 +112,7 @@ public class ProductControllerTests {
         when(productService.addProduct(any(ProductCreateDTO.class))).thenReturn(product);
 
         mockMvc.perform(post("/products")
+                .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(productCreateDTO)))
                 .andExpect(status().isOk())
@@ -93,7 +127,8 @@ public class ProductControllerTests {
     void deleteProductById_shouldDeleteProduct() throws Exception {
         doNothing().when(productService).deleteProductById(1);
 
-        mockMvc.perform(delete("/products/1"))
+        mockMvc.perform(delete("/products/1")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk());
 
         verify(productService, times(1)).deleteProductById(1);
@@ -105,6 +140,7 @@ public class ProductControllerTests {
         when(productService.updateProduct(any(Product.class))).thenReturn(updatedProduct);
 
         mockMvc.perform(put("/products")
+                .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedProduct)))
                 .andExpect(status().isOk())
@@ -117,13 +153,15 @@ public class ProductControllerTests {
 
     @Test
     void getProductById_shouldHandleInvalidIdFormat() throws Exception {
-        mockMvc.perform(get("/products/invalid"))
+        mockMvc.perform(get("/products/invalid")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void deleteProductById_shouldHandleInvalidIdFormat() throws Exception {
-        mockMvc.perform(delete("/products/invalid"))
+        mockMvc.perform(delete("/products/invalid")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isBadRequest());
     }
 }

@@ -3,16 +3,25 @@ package com.szymonfluder.shop.unit.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.szymonfluder.shop.controller.UserController;
 import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.SecurityConfig;
+import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.UserService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -21,6 +30,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@Import(SecurityConfig.class)
 public class UserControllerTests {
 
     @Autowired
@@ -29,15 +39,37 @@ public class UserControllerTests {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JWTService jwtService;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
     @Autowired
     private ObjectMapper objectMapper;
+
+    private final String validToken = "valid.jwt.token";
+
+    @BeforeEach
+    void setUp() {
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username("username")
+                .password("password")
+                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
+                .build();
+
+        when(jwtService.extractUsername(validToken)).thenReturn("username");
+        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
+        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+    }
 
     @Test
     void getAllUsers_shouldReturnAllUsers() throws Exception {
         List<UserDTO> users = List.of(new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0));
         when(userService.getAllUsers()).thenReturn(users);
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/users")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].userId").value(1))
@@ -50,7 +82,8 @@ public class UserControllerTests {
     void getAllUsers_shouldReturnEmptyList() throws Exception {
         when(userService.getAllUsers()).thenReturn(List.of());
 
-        mockMvc.perform(get("/users"))
+        mockMvc.perform(get("/users")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -63,7 +96,8 @@ public class UserControllerTests {
         UserDTO userDTO = new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0);
         when(userService.getUserByUsername("user")).thenReturn(userDTO);
 
-        mockMvc.perform(get("/users/user"))
+        mockMvc.perform(get("/users/user")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").value(1))
@@ -79,6 +113,7 @@ public class UserControllerTests {
         when(userService.addUser(any(UserRegisterDTO.class))).thenReturn(user);
 
         mockMvc.perform(post("/users")
+                .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userRegisterDTO)))
                 .andExpect(status().isOk())
@@ -93,7 +128,8 @@ public class UserControllerTests {
     void deleteUserById_shouldDeleteUser() throws Exception {
         doNothing().when(userService).deleteUserById(1);
 
-        mockMvc.perform(delete("/users/1"))
+        mockMvc.perform(delete("/users/1")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk());
 
         verify(userService, times(1)).deleteUserById(1);
@@ -105,6 +141,7 @@ public class UserControllerTests {
         when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/users")
+                .header("Authorization", "Bearer " + validToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk())
@@ -117,7 +154,36 @@ public class UserControllerTests {
 
     @Test
     void deleteUserById_shouldHandleInvalidIdFormat() throws Exception {
-        mockMvc.perform(delete("/users/invalid"))
+        mockMvc.perform(delete("/users/invalid")
+                .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_shouldRegisterUser() throws Exception {
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "password", "New Address");
+        doNothing().when(userService).register(any(UserRegisterDTO.class));
+
+        mockMvc.perform(post("/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRegisterDTO)))
+                .andExpect(status().isOk());
+
+        verify(userService, times(1)).register(any(UserRegisterDTO.class));
+    }
+
+    @Test
+    void login_shouldReturnToken() throws Exception {
+        UserLoginDTO userLoginDTO = new UserLoginDTO("user", "password");
+        String expectedToken = "jwt.token.response";
+        when(userService.verify(any(UserLoginDTO.class))).thenReturn(expectedToken);
+
+        mockMvc.perform(post("/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userLoginDTO)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(expectedToken));
+
+        verify(userService, times(1)).verify(any(UserLoginDTO.class));
     }
 }
