@@ -3,6 +3,7 @@ package com.szymonfluder.shop.integration.service;
 import com.szymonfluder.shop.dto.*;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
 import com.szymonfluder.shop.service.impl.CartServiceImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
@@ -21,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DataJpaTest
 @Import({CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class, ProductServiceImpl.class, ProductMapperImpl.class,
-        UserServiceImpl.class, UserMapperImpl.class})
+        UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CartServiceImplTests {
 
@@ -216,7 +217,7 @@ public class CartServiceImplTests {
 
     @Test
     void updateCartItem_shouldUpdateCartItem() {
-        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        addCartItemToDatabase();
         CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
 
         CartItemDTO updatedCartItemDTO = cartService.updateCartItem(cartItemDTOPassedToUpdateMethod);

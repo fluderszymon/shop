@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.integration.service;
 
+import com.szymonfluder.shop.integration.config.TestConfig;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
@@ -17,12 +19,14 @@ import com.szymonfluder.shop.service.impl.UserServiceImpl;
 import org.springframework.test.annotation.DirtiesContext;
 
 @DataJpaTest
-@Import({UserServiceImpl.class, UserMapperImpl.class})
+@Import({UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserServiceImplTests {
 
     @Autowired
     private UserServiceImpl userService;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     private User addUserToDatabase() {
         UserRegisterDTO userRegisterDTO = new UserRegisterDTO(
@@ -88,10 +92,16 @@ public class UserServiceImplTests {
     @Test
     void addUser_shouldReturnAddedUser() {
         User addedUser = addUserToDatabase();
-        User expectedUser = new User(1, "User", "user@outlook.com", "password", "USER", null, "Address", 0.0);
 
         assertThat(addedUser.getClass()).isEqualTo(User.class);
-        assertThat(addedUser).isEqualTo(expectedUser);
+        assertThat(addedUser.getUserId()).isEqualTo(1);
+        assertThat(addedUser.getUsername()).isEqualTo("User");
+        assertThat(addedUser.getEmail()).isEqualTo("user@outlook.com");
+        assertThat(addedUser.getRole()).isEqualTo("USER");
+        assertThat(addedUser.getAddress()).isEqualTo("Address");
+        assertThat(addedUser.getBalance()).isEqualTo(0.0);
+        
+        assertThat(passwordEncoder.matches("password", addedUser.getPassword())).isTrue();
     }
 
     @Test
@@ -105,6 +115,13 @@ public class UserServiceImplTests {
         User updatedUser = userService.updateUser(userPassedToUpdateMethod);
 
         assertThat(updatedUser.getClass()).isEqualTo(User.class);
-        assertThat(updatedUser).isEqualTo(userPassedToUpdateMethod);
+        assertThat(updatedUser.getUserId()).isEqualTo(userId);
+        assertThat(updatedUser.getUsername()).isEqualTo("UpdatedUsername");
+        assertThat(updatedUser.getEmail()).isEqualTo("updated@outlook.com");
+        assertThat(updatedUser.getRole()).isEqualTo("ADMIN");
+        assertThat(updatedUser.getAddress()).isEqualTo("updatedAddress");
+        assertThat(updatedUser.getBalance()).isEqualTo(100.00);
+        
+        assertThat(passwordEncoder.matches("updatedPassword", updatedUser.getPassword())).isTrue();
     }
 }

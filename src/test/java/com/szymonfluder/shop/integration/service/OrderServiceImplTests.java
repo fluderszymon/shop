@@ -3,6 +3,7 @@ package com.szymonfluder.shop.integration.service;
 import com.szymonfluder.shop.dto.*;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
 import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         UserServiceImpl.class, UserMapperImpl.class,
         CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class,
-        ProductServiceImpl.class, ProductMapperImpl.class})
+        ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests {
 
