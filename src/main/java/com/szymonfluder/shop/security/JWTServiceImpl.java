@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class JWTServiceImpl implements JWTService {
@@ -23,6 +24,7 @@ public class JWTServiceImpl implements JWTService {
     @Value("${jwt.secret.key}")
     private String secretKey;
 
+    @Override
     public String generateToken(String username) {
         Map<String, Object> claims = new HashMap<>();
 
@@ -70,5 +72,14 @@ public class JWTServiceImpl implements JWTService {
 
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
+    }
+
+    @Override
+    public String extractTokenFromHeader(HttpServletRequest request) throws IllegalArgumentException {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        throw new IllegalArgumentException("Invalid or missing Authorization header");
     }
 }
