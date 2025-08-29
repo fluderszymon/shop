@@ -5,6 +5,7 @@ import com.szymonfluder.shop.entity.Order;
 import com.szymonfluder.shop.entity.OrderItem;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
 import com.szymonfluder.shop.repository.OrderItemRepository;
 import com.szymonfluder.shop.repository.OrderRepository;
@@ -28,7 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Import({UserServiceImpl.class, UserMapperImpl.class, ProductServiceImpl.class,
         ProductMapperImpl.class, OrderServiceImpl.class, OrderMapperImpl.class,
         OrderItemMapperImpl.class, InvoiceServiceImpl.class, CartServiceImpl.class,
-        CartMapperImpl.class, CartItemMapperImpl.class})
+        CartMapperImpl.class, CartItemMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class InvoiceServiceImplTests {
 
