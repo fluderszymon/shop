@@ -14,12 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(CartController.class)
 @Import(SecurityConfig.class)
-public class CartControllerTests {
+public class CartControllerTests extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -46,19 +43,11 @@ public class CartControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String validToken = "valid.jwt.token";
+
 
     @BeforeEach
     void setUp() {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("username")
-                .password("password")
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
-                .build();
-
-        when(jwtService.extractUsername(validToken)).thenReturn("username");
-        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        setupJwtMocks(jwtService, userDetailsService);
     }
 
     @Test
@@ -67,7 +56,7 @@ public class CartControllerTests {
         when(cartService.getAllCarts()).thenReturn(carts);
 
         mockMvc.perform(get("/carts")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].cartId").value(1))
@@ -81,7 +70,7 @@ public class CartControllerTests {
         when(cartService.getAllCarts()).thenReturn(List.of());
 
         mockMvc.perform(get("/carts")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -95,7 +84,7 @@ public class CartControllerTests {
         when(cartService.getCartById(1)).thenReturn(cartDTO);
 
         mockMvc.perform(get("/carts/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartId").value(1))
@@ -110,7 +99,7 @@ public class CartControllerTests {
         when(cartService.addCart(1)).thenReturn(cartDTO);
 
         mockMvc.perform(post("/carts/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartId").value(1))
@@ -124,7 +113,7 @@ public class CartControllerTests {
         doNothing().when(cartService).deleteCartById(1);
 
         mockMvc.perform(delete("/carts/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
         verify(cartService, times(1)).deleteCartById(1);
@@ -136,7 +125,7 @@ public class CartControllerTests {
         when(cartService.updateCart(any(CartDTO.class))).thenReturn(cartDTO);
 
         mockMvc.perform(put("/carts")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(cartDTO)))
                 .andExpect(status().isOk())
@@ -153,7 +142,7 @@ public class CartControllerTests {
         when(cartService.getAllCartItemsByCartId(1)).thenReturn(cartItems);
 
         mockMvc.perform(get("/carts/1/items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].cartItemId").value(1))
@@ -167,7 +156,7 @@ public class CartControllerTests {
         when(cartService.getAllCartItemsByCartId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/carts/1/items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -181,7 +170,7 @@ public class CartControllerTests {
         when(cartService.getCartItemById(1)).thenReturn(cartItemDTO);
 
         mockMvc.perform(get("/carts/items/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.cartItemId").value(1))
@@ -196,7 +185,7 @@ public class CartControllerTests {
         when(cartService.addCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
 
         mockMvc.perform(post("/carts/1/items")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(cartItemDTO)))
                 .andExpect(status().isOk())
@@ -213,7 +202,7 @@ public class CartControllerTests {
         when(cartService.updateCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
 
         mockMvc.perform(put("/carts/1/items/1")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(cartItemDTO)))
                 .andExpect(status().isOk())
@@ -229,7 +218,7 @@ public class CartControllerTests {
         doNothing().when(cartService).deleteCartItemById(1);
 
         mockMvc.perform(delete("/carts/1/items/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
         verify(cartService, times(1)).deleteCartItemById(1);
@@ -240,7 +229,7 @@ public class CartControllerTests {
         when(cartService.getCartTotal(1)).thenReturn(59.97);
 
         mockMvc.perform(get("/carts/1/total")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().string("59.97"));
 

@@ -16,12 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(UserController.class)
 @Import(SecurityConfig.class)
-public class UserControllerTests {
+public class UserControllerTests extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -48,19 +45,11 @@ public class UserControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String validToken = "valid.jwt.token";
+
 
     @BeforeEach
     void setUp() {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("username")
-                .password("password")
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
-                .build();
-
-        when(jwtService.extractUsername(validToken)).thenReturn("username");
-        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        setupJwtMocks(jwtService, userDetailsService);
     }
 
     @Test
@@ -69,7 +58,7 @@ public class UserControllerTests {
         when(userService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/users")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].userId").value(1))
@@ -83,7 +72,7 @@ public class UserControllerTests {
         when(userService.getAllUsers()).thenReturn(List.of());
 
         mockMvc.perform(get("/users")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -97,7 +86,7 @@ public class UserControllerTests {
         when(userService.getUserByUsername("user")).thenReturn(userDTO);
 
         mockMvc.perform(get("/users/user")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.userId").value(1))
@@ -113,7 +102,7 @@ public class UserControllerTests {
         when(userService.addUser(any(UserRegisterDTO.class))).thenReturn(user);
 
         mockMvc.perform(post("/users")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userRegisterDTO)))
                 .andExpect(status().isOk())
@@ -129,7 +118,7 @@ public class UserControllerTests {
         doNothing().when(userService).deleteUserById(1);
 
         mockMvc.perform(delete("/users/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
         verify(userService, times(1)).deleteUserById(1);
@@ -141,7 +130,7 @@ public class UserControllerTests {
         when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/users")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedUser)))
                 .andExpect(status().isOk())
@@ -155,7 +144,7 @@ public class UserControllerTests {
     @Test
     void deleteUserById_shouldHandleInvalidIdFormat() throws Exception {
         mockMvc.perform(delete("/users/invalid")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());
     }
 

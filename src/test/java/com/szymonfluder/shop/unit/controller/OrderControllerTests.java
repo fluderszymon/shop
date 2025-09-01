@@ -13,13 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -28,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(OrderController.class)
 @Import(SecurityConfig.class)
-public class OrderControllerTests {
+public class OrderControllerTests extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -42,19 +39,11 @@ public class OrderControllerTests {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
-    private final String validToken = "valid.jwt.token";
+
 
     @BeforeEach
     void setUp() {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("username")
-                .password("password")
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
-                .build();
-
-        when(jwtService.extractUsername(validToken)).thenReturn("username");
-        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        setupJwtMocks(jwtService, userDetailsService);
     }
 
     @Test
@@ -63,7 +52,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrders()).thenReturn(orders);
 
         mockMvc.perform(get("/orders")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderId").value(1))
@@ -77,7 +66,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrders()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -91,7 +80,7 @@ public class OrderControllerTests {
         when(orderService.getOrderById(1)).thenReturn(orderDTO);
 
         mockMvc.perform(get("/orders/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.orderId").value(1))
@@ -106,7 +95,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrderItems()).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/order-items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderItemId").value(1))
@@ -120,7 +109,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrderItems()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/order-items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -134,7 +123,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/1/order-items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].orderItemId").value(1))
@@ -148,7 +137,7 @@ public class OrderControllerTests {
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/1/order-items")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -161,7 +150,7 @@ public class OrderControllerTests {
         doNothing().when(orderService).checkout(1, 1);
 
         mockMvc.perform(post("/orders/checkout/1/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
         verify(orderService, times(1)).checkout(1, 1);

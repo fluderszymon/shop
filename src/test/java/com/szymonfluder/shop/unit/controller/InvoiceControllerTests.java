@@ -7,21 +7,21 @@ import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.InvoiceService;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(InvoiceController.class)
 @Import(SecurityConfig.class)
-public class InvoiceControllerTests {
+public class InvoiceControllerTests extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,19 +45,11 @@ public class InvoiceControllerTests {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
-    private final String validToken= "valid.jwt.token";
+
 
     @BeforeEach
     void setUp() {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("username")
-                .password("password")
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
-                .build();
-
-        when(jwtService.extractUsername(validToken)).thenReturn("username");
-        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
     }
 
     private InvoiceDTO provideInvoiceDTO() {
@@ -77,7 +69,7 @@ public class InvoiceControllerTests {
         when(invoiceService.generateInvoicePdf(any(InvoiceDTO.class))).thenReturn(pdfStream);
 
         mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Length", "11"));
@@ -92,7 +84,7 @@ public class InvoiceControllerTests {
         when(invoiceService.createInvoiceDTO(orderId)).thenReturn(null);
 
         mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isNotFound());
 
         verify(invoiceService, times(1)).createInvoiceDTO(orderId);
@@ -109,7 +101,7 @@ public class InvoiceControllerTests {
             .thenThrow(new IOException("PDF generation failed"));
 
         mockMvc.perform(get("/invoices/{orderId}/pdf", orderId)
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isInternalServerError());
 
         verify(invoiceService, times(1)).createInvoiceDTO(orderId);
@@ -119,7 +111,7 @@ public class InvoiceControllerTests {
     @Test
     void generateInvoicePdf_shouldHandleInvalidOrderIdFormat() throws Exception {
         mockMvc.perform(get("/invoices/invalid/pdf")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());
     }
 }

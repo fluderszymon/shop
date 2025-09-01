@@ -15,12 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -30,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ProductController.class)
 @Import(SecurityConfig.class)
-public class ProductControllerTests {
+public class ProductControllerTests extends AbstractControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,19 +44,11 @@ public class ProductControllerTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private final String validToken = "valid.jwt.token";
+
 
     @BeforeEach
     void setUp() {
-        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
-                .username("username")
-                .password("password")
-                .authorities(Collections.singletonList(new SimpleGrantedAuthority("USER")))
-                .build();
-
-        when(jwtService.extractUsername(validToken)).thenReturn("username");
-        when(jwtService.validateToken(validToken, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+        setupJwtMocks(jwtService, userDetailsService);
     }
 
     @Test
@@ -68,7 +57,7 @@ public class ProductControllerTests {
         when(productService.getAllProducts()).thenReturn(products);
 
         mockMvc.perform(get("/products")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].productId").value(1))
@@ -82,7 +71,7 @@ public class ProductControllerTests {
         when(productService.getAllProducts()).thenReturn(List.of());
 
         mockMvc.perform(get("/products")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isEmpty());
@@ -96,7 +85,7 @@ public class ProductControllerTests {
         when(productService.getProductById(1)).thenReturn(productDTO);
 
         mockMvc.perform(get("/products/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.productId").value(1))
@@ -112,7 +101,7 @@ public class ProductControllerTests {
         when(productService.addProduct(any(ProductCreateDTO.class))).thenReturn(product);
 
         mockMvc.perform(post("/products")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(productCreateDTO)))
                 .andExpect(status().isOk())
@@ -128,7 +117,7 @@ public class ProductControllerTests {
         doNothing().when(productService).deleteProductById(1);
 
         mockMvc.perform(delete("/products/1")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
         verify(productService, times(1)).deleteProductById(1);
@@ -140,7 +129,7 @@ public class ProductControllerTests {
         when(productService.updateProduct(any(Product.class))).thenReturn(updatedProduct);
 
         mockMvc.perform(put("/products")
-                .header("Authorization", "Bearer " + validToken)
+                .header("Authorization", AUTH_HEADER)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(updatedProduct)))
                 .andExpect(status().isOk())
@@ -154,14 +143,14 @@ public class ProductControllerTests {
     @Test
     void getProductById_shouldHandleInvalidIdFormat() throws Exception {
         mockMvc.perform(get("/products/invalid")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void deleteProductById_shouldHandleInvalidIdFormat() throws Exception {
         mockMvc.perform(delete("/products/invalid")
-                .header("Authorization", "Bearer " + validToken))
+                .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());
     }
 }
