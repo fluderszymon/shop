@@ -1,6 +1,7 @@
 package com.szymonfluder.shop.service;
 
 import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 
@@ -18,4 +19,6 @@ public interface UserService {
     User updateUser(User user);
     void updateUserBalance(int userId, double newBalance);
 
+    void register(UserRegisterDTO userRegisterDTO) throws Exception;
+    String verify(UserLoginDTO userLoginDTO);
 }

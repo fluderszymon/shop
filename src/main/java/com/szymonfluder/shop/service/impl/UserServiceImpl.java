@@ -1,13 +1,19 @@
 package com.szymonfluder.shop.service.impl;
 
 import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.exception.UsernameTakenException;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
-import com.szymonfluder.shop.service.CartService;
+import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,11 +24,17 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final JWTService jwtService;
+    private final AuthenticationManager authenticationManager;
+    private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
+                           JWTService jwtService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
     }
 
     public List<UserDTO> getAllUsers() {
@@ -44,9 +56,9 @@ public class UserServiceImpl implements UserService {
         return userDTO.getBalance();
     }
 
-    // password is visible
     public User addUser(UserRegisterDTO userRegisterDTO) {
         User user = userMapper.userRegisterDTOToUser(userRegisterDTO);
+        user.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
         user.setRole("USER");
         return userRepository.save(user);
     }
@@ -55,7 +67,6 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
-    // password is visible
     public User updateUser(User user) {
         Optional<User> tempUser = userRepository.findById(user.getUserId());
         User updatedUser = new User();
@@ -63,7 +74,7 @@ public class UserServiceImpl implements UserService {
             updatedUser.setUserId(user.getUserId());
             updatedUser.setUsername(user.getUsername());
             updatedUser.setEmail(user.getEmail());
-            updatedUser.setPassword(user.getPassword());
+            updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
             updatedUser.setRole(user.getRole());
             updatedUser.setAddress(user.getAddress());
             updatedUser.setBalance(user.getBalance());
@@ -76,5 +87,30 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setBalance(newBalance);
         userRepository.save(user);
+    }
+
+    @Override
+    public void register(UserRegisterDTO userRegisterDTO) throws UsernameTakenException {
+        if (userRepository.findUserDTOByUsername(userRegisterDTO.getUsername()) == null) {
+            User userToAdd = userMapper.userRegisterDTOToUser(userRegisterDTO);
+            userToAdd.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
+            userToAdd.setRole("USER");
+            userRepository.save(userToAdd);
+        } else {
+            throw new UsernameTakenException(userRegisterDTO.getUsername());
+        }
+    }
+
+    @Override
+    public String verify(UserLoginDTO userLoginDTO) {
+        if (userRepository.findUserDTOByUsername(userLoginDTO.getUsername()) != null) {
+            Authentication auth = authenticationManager.
+                    authenticate(new UsernamePasswordAuthenticationToken(
+                            userLoginDTO.getUsername(), userLoginDTO.getPassword()));
+            if (auth.isAuthenticated()) {
+                return jwtService.generateToken(userLoginDTO.getUsername());
+            }
+        }
+        return "Could not verify user";
     }
 }

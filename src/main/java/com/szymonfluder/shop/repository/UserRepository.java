@@ -29,4 +29,5 @@ public interface UserRepository extends JpaRepository<User, Integer> {
             "WHERE u.username=?1")
     UserDTO findUserDTOByUsername(String username);
 
+    User findUserByUsername(String username);
 }

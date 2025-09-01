@@ -4,6 +4,7 @@ import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.ProductMapperImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
-@Import({ProductServiceImpl.class, ProductMapperImpl.class})
+@Import({ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ProductServiceImplTests {
 

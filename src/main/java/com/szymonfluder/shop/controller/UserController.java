@@ -1,6 +1,7 @@
 package com.szymonfluder.shop.controller;
 
 import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.service.UserService;
@@ -43,5 +44,15 @@ public class UserController {
     @PutMapping
     public User updateUser(@RequestBody User user) {
         return userService.updateUser(user);
+    }
+
+    @PostMapping("/register")
+    public void register(@RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
+        userService.register(userRegisterDTO);
+}
+
+    @PostMapping("/login")
+    public String login(@RequestBody UserLoginDTO userLoginDTO) {
+        return userService.verify(userLoginDTO);
     }
 }
