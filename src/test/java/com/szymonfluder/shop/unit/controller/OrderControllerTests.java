@@ -39,11 +39,9 @@ public class OrderControllerTests extends AbstractControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
-
-
     @BeforeEach
     void setUp() {
-        setupJwtMocks(jwtService, userDetailsService);
+        setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
     }
 
     @Test

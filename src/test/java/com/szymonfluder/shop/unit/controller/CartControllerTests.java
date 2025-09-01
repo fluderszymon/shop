@@ -43,11 +43,9 @@ public class CartControllerTests extends AbstractControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
-
     @BeforeEach
     void setUp() {
-        setupJwtMocks(jwtService, userDetailsService);
+        setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
     }
 
     @Test

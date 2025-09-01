@@ -7,9 +7,6 @@ import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.InvoiceService;
-
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,8 +41,6 @@ public class InvoiceControllerTests extends AbstractControllerTest {
 
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
-
-
 
     @BeforeEach
     void setUp() {

@@ -24,14 +24,6 @@ public abstract class AbstractControllerTest {
                 .build();
     }
 
-    protected void setupJwtMocks(JWTService jwtService, UserDetailsServiceImpl userDetailsService) {
-        UserDetails userDetails = createTestUserDetails();
-        
-        when(jwtService.extractUsername(VALID_JWT)).thenReturn("username");
-        when(jwtService.validateToken(VALID_JWT, userDetails)).thenReturn(true);
-        when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
-    }
-
     protected void setupJwtMocksWithTokenExtraction(JWTService jwtService, UserDetailsServiceImpl userDetailsService) {
         UserDetails userDetails = createTestUserDetails();
         

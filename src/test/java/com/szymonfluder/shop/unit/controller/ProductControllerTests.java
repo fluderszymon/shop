@@ -48,7 +48,7 @@ public class ProductControllerTests extends AbstractControllerTest {
 
     @BeforeEach
     void setUp() {
-        setupJwtMocks(jwtService, userDetailsService);
+        setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
     }
 
     @Test
