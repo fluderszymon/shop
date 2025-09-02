@@ -34,7 +34,6 @@ class RateLimitServiceImplTests {
     @Test
     void tryConsume_shouldReturnFalse_whenNoTokensAvailable() {
         rateLimitService.tryConsume(TEST_KEY, 5);
-        
         boolean result = rateLimitService.tryConsume(TEST_KEY, 1);
         
         assertThat(result).isFalse();
@@ -43,7 +42,6 @@ class RateLimitServiceImplTests {
     @Test
     void tryConsume_shouldReturnFalse_whenRequestingMoreTokensThanAvailable() {
         rateLimitService.tryConsume(TEST_KEY, 3);
-        
         boolean result = rateLimitService.tryConsume(TEST_KEY, 3);
         
         assertThat(result).isFalse();
@@ -59,7 +57,6 @@ class RateLimitServiceImplTests {
     @Test
     void getAvailableTokens_shouldReturnCorrectCount_afterConsumingTokens() {
         rateLimitService.tryConsume(TEST_KEY, 2);
-        
         long availableTokens = rateLimitService.getAvailableTokens(TEST_KEY);
         
         assertThat(availableTokens).isEqualTo(3);
@@ -68,7 +65,6 @@ class RateLimitServiceImplTests {
     @Test
     void getAvailableTokens_shouldReturnZero_whenAllTokensConsumed() {
         rateLimitService.tryConsume(TEST_KEY, 5);
-        
         long availableTokens = rateLimitService.getAvailableTokens(TEST_KEY);
         
         assertThat(availableTokens).isEqualTo(0);
