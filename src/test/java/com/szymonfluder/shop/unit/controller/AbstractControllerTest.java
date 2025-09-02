@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.unit.controller;
 
+import com.szymonfluder.shop.security.ResourceAccessService;
 import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
@@ -38,5 +39,9 @@ public abstract class AbstractControllerTest {
     protected void setupRateLimitMocks(RateLimitService rateLimitService) {
         when(rateLimitService.tryConsume(any(String.class), any(Integer.class))).thenReturn(true);
         when(rateLimitService.getAvailableTokens(any(String.class))).thenReturn(59L);
+    }
+
+    protected void setupResourceAccessServiceMocks(ResourceAccessService resourceAccessService) {
+        when(resourceAccessService.isOwnerOrAdmin(any(Integer.class))).thenReturn(true);
     }
 }

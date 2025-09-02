@@ -9,12 +9,15 @@ import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.CartService;
+import com.szymonfluder.shop.security.ResourceAccessService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -41,6 +44,9 @@ public class CartControllerTests extends AbstractControllerTest {
     @MockitoBean
     private RateLimitService rateLimitService;
 
+    @MockitoBean(name = "resourceAccessService")
+    private ResourceAccessService resourceAccessService;
+
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
@@ -51,9 +57,11 @@ public class CartControllerTests extends AbstractControllerTest {
     void setUp() {
         setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
         setupRateLimitMocks(rateLimitService);
+        setupResourceAccessServiceMocks(resourceAccessService);
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void getAllCarts_shouldReturnAllCarts() throws Exception {
         List<CartDTO> carts = List.of(new CartDTO(1, 1));
         when(cartService.getAllCarts()).thenReturn(carts);
@@ -69,6 +77,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void getAllCarts_shouldReturnEmptyList() throws Exception {
         when(cartService.getAllCarts()).thenReturn(List.of());
 
@@ -82,6 +91,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void getCartById_shouldReturnCart() throws Exception {
         CartDTO cartDTO = new CartDTO(1, 1);
         when(cartService.getCartById(1)).thenReturn(cartDTO);
@@ -97,6 +107,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void addCart_shouldReturnCreatedCart() throws Exception {
         CartDTO cartDTO = new CartDTO(1, 1);
         when(cartService.addCart(1)).thenReturn(cartDTO);
@@ -168,6 +179,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void getCartItemById_shouldReturnCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 2);
         when(cartService.getCartItemById(1)).thenReturn(cartItemDTO);
@@ -228,6 +240,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", authorities = {"ADMIN"})
     void getCartTotal_shouldReturnTotal() throws Exception {
         when(cartService.getCartTotal(1)).thenReturn(59.97);
 
