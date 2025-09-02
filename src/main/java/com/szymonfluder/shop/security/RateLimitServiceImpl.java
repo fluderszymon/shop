@@ -20,8 +20,10 @@ public class RateLimitServiceImpl implements RateLimitService {
     @Value("${rate.limit.duration}")
     private int durationInSeconds;
 
-
     public boolean tryConsume(String key, int tokens) {
+        if (tokens <= 0) {
+            return false;
+        }
         Bucket bucket = getOrCreateBucket(key);
         return bucket.tryConsume(tokens);
     }
