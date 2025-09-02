@@ -1,6 +1,7 @@
 package com.szymonfluder.shop.unit.controller;
 
 import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,5 +32,11 @@ public abstract class AbstractControllerTest {
         when(jwtService.extractUsername(VALID_JWT)).thenReturn("username");
         when(jwtService.validateToken(VALID_JWT, userDetails)).thenReturn(true);
         when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
+    }
+
+    
+    protected void setupRateLimitMocks(RateLimitService rateLimitService) {
+        when(rateLimitService.tryConsume(any(String.class), any(Integer.class))).thenReturn(true);
+        when(rateLimitService.getAvailableTokens(any(String.class))).thenReturn(59L);
     }
 }
