@@ -6,6 +6,7 @@ import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.ProductService;
@@ -39,16 +40,18 @@ public class ProductControllerTests extends AbstractControllerTest {
     private JWTService jwtService;
 
     @MockitoBean
+    private RateLimitService rateLimitService;
+
+    @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
-
-
     @BeforeEach
     void setUp() {
         setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
+        setupRateLimitMocks(rateLimitService);
     }
 
     @Test

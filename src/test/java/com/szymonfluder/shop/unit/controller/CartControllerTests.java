@@ -5,6 +5,7 @@ import com.szymonfluder.shop.controller.CartController;
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.CartService;
@@ -38,6 +39,9 @@ public class CartControllerTests extends AbstractControllerTest {
     private JWTService jwtService;
 
     @MockitoBean
+    private RateLimitService rateLimitService;
+
+    @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
@@ -46,6 +50,7 @@ public class CartControllerTests extends AbstractControllerTest {
     @BeforeEach
     void setUp() {
         setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
+        setupRateLimitMocks(rateLimitService);
     }
 
     @Test

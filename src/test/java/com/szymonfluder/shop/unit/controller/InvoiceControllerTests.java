@@ -4,6 +4,7 @@ import com.szymonfluder.shop.controller.InvoiceController;
 import com.szymonfluder.shop.dto.InvoiceDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.InvoiceService;
@@ -40,11 +41,16 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     private JWTService jwtService;
 
     @MockitoBean
+    private RateLimitService rateLimitService;
+
+    @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
 
     @BeforeEach
     void setUp() {
         setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
+        setupRateLimitMocks(rateLimitService);
+
     }
 
     private InvoiceDTO provideInvoiceDTO() {
