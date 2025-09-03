@@ -21,12 +21,12 @@ A modern e-commerce platform built with Spring Boot featuring JWT authentication
 - Rate limiting (Bucket4j)
 
 **Testing**
-- Lombok
 - JUnit 5
 - Mockito
 - JaCoCo
 
 **Additional Tools**
+- Lombok
 - MapStruct (object mapping)
 - iText (PDF generation)
 
@@ -50,7 +50,6 @@ Entities     → Data model
 
 ## 🛒 Features
 
-**Core Functionality**
 - User registration/authentication with balance management
 - Product catalog
 - Persistent shopping cart
@@ -65,12 +64,13 @@ Entities     → Data model
 1. Clone repository
 2. Create database: `CREATE DATABASE shop;`
 3. Update `application.properties` with database credentials
-4. Run: `mvn spring-boot:run`
+4. Run: `mvn spring-boot:run` - let hibernate create tables
+5. Populate database with example data `database.populate.sql`
 
 **Testing:**
 ```bash
 mvn test                    # Run tests
-mvn jacoco:report          # Coverage report
+mvn jacoco:report           # Coverage report
 ```
 
 **Configuration:**
@@ -81,7 +81,7 @@ spring.datasource.username=root
 spring.datasource.password=admin
 
 # Security
-jwt.secret.key=your-secret-key
+jwt.secret.key=your-secret-key      # should be stored safely
 jwt.expiration.time=900000          # 15 minutes
 rate.limit.requests=60              # requests per minute
 ```
@@ -123,13 +123,9 @@ DELETE /carts/{cartId}           # Delete cart
 
 **Orders & Invoices**
 ```
-GET    /orders                           # List all orders
-GET    /orders/{orderId}                 # Get order by ID
+GET    /orders                            # List all orders
+GET    /orders/{orderId}                  # Get order by ID
 POST   /orders/checkout/{userId}/{cartId} # Process checkout
-GET    /orders/{orderId}/order-items     # Get order items
-GET    /invoices/{orderId}/pdf           # Generate invoice PDF
+GET    /orders/{orderId}/order-items      # Get order items
+GET    /invoices/{orderId}/pdf            # Generate invoice PDF
 ```
-
-
-
-
