@@ -9,11 +9,11 @@ import com.szymonfluder.shop.mapper.CartItemMapper;
 import com.szymonfluder.shop.mapper.CartMapper;
 import com.szymonfluder.shop.repository.CartItemRepository;
 import com.szymonfluder.shop.repository.CartRepository;
-import com.szymonfluder.shop.service.UserService;
 import com.szymonfluder.shop.service.CartService;
+import com.szymonfluder.shop.service.CartAuthService;
 import com.szymonfluder.shop.service.ProductService;
+import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,17 +31,19 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final CartItemMapper cartItemMapper;
     private final UserService userService;
+    private final CartAuthService cartAuthService;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, CartMapper cartMapper,
                            ProductService productService, CartItemRepository cartItemRepository,
-                           CartItemMapper cartItemMapper, UserService userService) {
+                           CartItemMapper cartItemMapper, UserService userService, CartAuthService cartAuthService) {
         this.cartRepository = cartRepository;
         this.cartMapper = cartMapper;
         this.productService = productService;
         this.cartItemRepository = cartItemRepository;
         this.cartItemMapper = cartItemMapper;
         this.userService = userService;
+        this.cartAuthService = cartAuthService;
     }
 
     // methods for "/carts" endpoint
@@ -151,17 +153,13 @@ public class CartServiceImpl implements CartService {
     public CartDTO getCartDTOForCurrentUser() {
         UserDTO currentUserDTO = userService.getCurrentUserDTO();
         return cartRepository.findCartDTOByUserId(currentUserDTO.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new RuntimeException("Cart not found for current user"));
     }
 
     @Override
     public CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId) {
-        CartItemDTO cartItemDTO = getCartItemById(cartItemId);
-        CartDTO myCartDTO = getCartDTOForCurrentUser();
-        if (cartItemDTO.getCartId() != myCartDTO.getCartId()) {
-            throw new AccessDeniedException("You are not allowed to get this cart item");
-        }
-        return cartItemDTO;
+        cartAuthService.validateCartItemOwnership(cartItemId);
+        return getCartItemById(cartItemId);
     }
 
     @Override
@@ -172,29 +170,19 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO) {
-        CartDTO myCart = getCartDTOForCurrentUser();
-        if (myCart.getCartId() != cartItemDTO.getCartId()) {
-            throw new AccessDeniedException("You are not allowed to add this cart item");
-        }
+        cartAuthService.validateCartItemOwnership(cartItemDTO);
         return addCartItem(cartItemDTO);
     }
 
     @Override
     public CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO) {
-        CartDTO myCart = getCartDTOForCurrentUser();
-        if (myCart.getCartId() != cartItemDTO.getCartId()) {
-            throw new AccessDeniedException("You are not allowed to update this cart item");
-        }
+        cartAuthService.validateCartItemOwnership(cartItemDTO);
         return updateCartItem(cartItemDTO);
     }
 
     @Override
     public void deleteCartItemFromCartForCurrentUser(int cartItemId) {
-        CartDTO myCartDTO = getCartDTOForCurrentUser();
-        CartItemDTO cartItemDTO = getCartItemDTOForCurrentUserByCartItemId(cartItemId);
-        if (cartItemDTO.getCartId() != myCartDTO.getCartId()) {
-            throw new AccessDeniedException("You are not allowed to delete this cart item");
-        }
+        cartAuthService.validateCartItemOwnership(cartItemId);
         deleteCartItemById(cartItemId);
     }
 

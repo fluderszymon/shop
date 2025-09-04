@@ -13,8 +13,6 @@ public interface CartService {
     void deleteCartById(int cartId);
     CartDTO updateCart(CartDTO cartDTO);
 
-    double getCartTotal(int cartId);
-
     List<CartItemDTO> getAllCartItems();
     List<CartItemDTO> getAllCartItemsByCartId(int cartId);
     CartItemDTO getCartItemById(int cartItemId);
@@ -22,13 +20,15 @@ public interface CartService {
     void deleteCartItemById(int cartItemId);
     CartItemDTO updateCartItem(CartItemDTO cartItemDTO);
 
+    double getCartTotal(int cartId);
 
     // methods for "/my-cart" endpoints
     CartDTO getCartDTOForCurrentUser();
     CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId);
     List<CartItemDTO> getCartItemsInCartForCurrentUser();
     CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO);
-    CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO);
     void deleteCartItemFromCartForCurrentUser(int cartItemId);
+    CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO);
+
     double getCartTotalForCurrentUser();
 }

@@ -70,9 +70,9 @@ public class CartController {
         return cartService.addCartItem(cartItemDTO);
     }
 
-    @PutMapping("/{cartId}/items/{itemId}")
+    @PutMapping("/{cartId}/items/{cartItemId}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
+    public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int cartItemId, @RequestBody CartItemDTO cartItemDTO) {
         return cartService.updateCartItem(cartItemDTO);
     }
 
