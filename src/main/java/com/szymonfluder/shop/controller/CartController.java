@@ -85,4 +85,30 @@ public class CartController {
     public double getCartTotal(@PathVariable int cartId) {
         return cartService.getCartTotal(cartId);
     }
+
+    // "/my-cart" endpoints
+
+    @GetMapping("/my-cart")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartDTO getMyCart() {
+        return cartService.getCartDTOForCurrentUser();
+    }
+
+    @GetMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<CartItemDTO> getMyCartItems() {
+        return cartService.getCartItemsInCartForCurrentUser();
+    }
+
+    @PostMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO addCartItemToMyCart(@RequestBody CartItemDTO cartItemDTO) {
+        return cartService.addCartItemToCartForCurrentUser(cartItemDTO);
+    }
+
+    @PutMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO updateCartItemInMyCart(@RequestBody CartItemDTO cartItemDTO) {
+        return cartService.updateCartItemInCartForCurrentUser(cartItemDTO);
+    }
 }

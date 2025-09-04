@@ -8,4 +8,5 @@ public interface JWTService {
     boolean validateToken(String token, UserDetails userDetails);
     String extractUsername(String token);
     String extractTokenFromHeader(HttpServletRequest request) throws IllegalArgumentException;
+    String getCurrentUsername();
 }

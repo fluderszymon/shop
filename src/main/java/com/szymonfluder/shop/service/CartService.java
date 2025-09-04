@@ -22,4 +22,11 @@ public interface CartService {
     void deleteCartItemById(int cartItemId);
     CartItemDTO updateCartItem(CartItemDTO cartItemDTO);
 
+
+    // "/my-cart" endpoint methods
+    CartDTO getCartDTOForCurrentUser();
+    List<CartItemDTO> getCartItemsInCartForCurrentUser();
+    CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO);
+    CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO);
+    void deleteCartItemFromCartForCurrentUser(int cartItemId);
 }
