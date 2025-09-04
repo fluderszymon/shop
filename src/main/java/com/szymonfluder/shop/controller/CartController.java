@@ -20,6 +20,8 @@ public class CartController {
         this.cartService = cartService;
     }
 
+    // "/carts" endpoints for admin
+    
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartDTO> getAllCarts() {
@@ -39,19 +41,19 @@ public class CartController {
     }
 
     @DeleteMapping("/{cartId}")
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteCartById(@PathVariable int cartId) {
         cartService.deleteCartById(cartId);
     }
 
     @PutMapping
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartDTO.cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CartDTO updateCart(@RequestBody CartDTO cartDTO) {
         return cartService.updateCart(cartDTO);
     }
 
     @GetMapping("/{cartId}/items")
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartItemDTO> getCartItemsInCartByCartId(@PathVariable int cartId) {
         return cartService.getAllCartItemsByCartId(cartId);
     }
@@ -63,19 +65,19 @@ public class CartController {
     }
 
     @PostMapping("/{cartId}/items")
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CartItemDTO addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
         return cartService.addCartItem(cartItemDTO);
     }
 
     @PutMapping("/{cartId}/items/{itemId}")
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
         return cartService.updateCartItem(cartItemDTO);
     }
 
     @DeleteMapping("/{cartId}/items/{cartItemId}")
-    @PreAuthorize("@resourceAccessService.isOwnerOrAdmin(#cartId)")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteCartItem(@PathVariable int cartId, @PathVariable int cartItemId) {
         cartService.deleteCartItemById(cartItemId);
     }
@@ -86,12 +88,18 @@ public class CartController {
         return cartService.getCartTotal(cartId);
     }
 
-    // "/my-cart" endpoints
+    // "/my-cart" endpoints which verify that the user changes only his own cart
 
     @GetMapping("/my-cart")
     @PreAuthorize("hasAuthority('USER')")
     public CartDTO getMyCart() {
         return cartService.getCartDTOForCurrentUser();
+    }
+
+    @GetMapping("/my-cart/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO getCartItemByCartItemId(@PathVariable int cartItemId) {
+        return cartService.getCartItemDTOForCurrentUserByCartItemId(cartItemId);
     }
 
     @GetMapping("/my-cart/items")
@@ -110,5 +118,17 @@ public class CartController {
     @PreAuthorize("hasAuthority('USER')")
     public CartItemDTO updateCartItemInMyCart(@RequestBody CartItemDTO cartItemDTO) {
         return cartService.updateCartItemInCartForCurrentUser(cartItemDTO);
+    }
+
+    @DeleteMapping("/my-cart/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public void deleteCartItemFromMyCart(@PathVariable int cartItemId) {
+        cartService.deleteCartItemFromCartForCurrentUser(cartItemId);
+    }
+
+    @GetMapping("/my-cart/total")
+    @PreAuthorize("hasAuthority('USER')")
+    public double getMyCartTotal() {
+        return cartService.getCartTotalForCurrentUser();
     }
 }

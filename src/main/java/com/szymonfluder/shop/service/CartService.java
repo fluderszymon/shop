@@ -23,10 +23,12 @@ public interface CartService {
     CartItemDTO updateCartItem(CartItemDTO cartItemDTO);
 
 
-    // "/my-cart" endpoint methods
+    // methods for "/my-cart" endpoints
     CartDTO getCartDTOForCurrentUser();
+    CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId);
     List<CartItemDTO> getCartItemsInCartForCurrentUser();
     CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO);
     CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO);
     void deleteCartItemFromCartForCurrentUser(int cartItemId);
+    double getCartTotalForCurrentUser();
 }

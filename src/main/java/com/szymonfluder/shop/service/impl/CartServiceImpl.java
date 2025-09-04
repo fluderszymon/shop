@@ -44,6 +44,8 @@ public class CartServiceImpl implements CartService {
         this.userService = userService;
     }
 
+    // methods for "/carts" endpoint
+
     @Override
     public List<CartDTO> getAllCarts() {
         return cartRepository.findAll()
@@ -109,17 +111,18 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItemDTO getCartItemById(int cartItemId) {
-        CartItem foundCartItem = cartItemRepository.findById(cartItemId).orElseThrow(() -> new RuntimeException("CartItem not found"));
+        CartItem foundCartItem = cartItemRepository.findById(cartItemId).
+                                    orElseThrow(() -> new RuntimeException("CartItem not found"));
         return cartItemMapper.cartItemToCartItemDTO(foundCartItem);
     }
 
     @Override
     public CartItemDTO addCartItem(CartItemDTO cartItemDTO) {
-        if (productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
-            CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
-            return cartItemMapper.cartItemToCartItemDTO(savedCartItem);
+        if (!productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
+            throw new RuntimeException("Not enough products in stock");
         }
-        return null;
+        CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
+        return cartItemMapper.cartItemToCartItemDTO(savedCartItem);
     }
 
     @Override
@@ -142,12 +145,23 @@ public class CartServiceImpl implements CartService {
         return cartItemMapper.cartItemToCartItemDTO(updatedCartItem);
     }
 
-    // "/my-cart" endpoint methods
+    // methods for "/my-cart" endpoint
+
     @Override
     public CartDTO getCartDTOForCurrentUser() {
         UserDTO currentUserDTO = userService.getCurrentUserDTO();
         return cartRepository.findCartDTOByUserId(currentUserDTO.getUserId())
                     .orElseThrow(() -> new RuntimeException("Cart not found"));
+    }
+
+    @Override
+    public CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId) {
+        CartItemDTO cartItemDTO = getCartItemById(cartItemId);
+        CartDTO myCartDTO = getCartDTOForCurrentUser();
+        if (cartItemDTO.getCartId() != myCartDTO.getCartId()) {
+            throw new AccessDeniedException("You are not allowed to get this cart item");
+        }
+        return cartItemDTO;
     }
 
     @Override
@@ -159,11 +173,10 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO) {
         CartDTO myCart = getCartDTOForCurrentUser();
-        CartItemDTO cartItemDTOToAdd = new CartItemDTO();
-        cartItemDTO.setCartId(myCart.getCartId());
-        cartItemDTO.setProductId(cartItemDTO.getProductId());
-        cartItemDTOToAdd.setQuantity(cartItemDTO.getQuantity());
-        return addCartItem(cartItemDTOToAdd);
+        if (myCart.getCartId() != cartItemDTO.getCartId()) {
+            throw new AccessDeniedException("You are not allowed to add this cart item");
+        }
+        return addCartItem(cartItemDTO);
     }
 
     @Override
@@ -172,20 +185,22 @@ public class CartServiceImpl implements CartService {
         if (myCart.getCartId() != cartItemDTO.getCartId()) {
             throw new AccessDeniedException("You are not allowed to update this cart item");
         }
-
-        CartItemDTO cartItemDTOToUpdate = new CartItemDTO();
-        cartItemDTOToUpdate.setCartId(myCart.getCartId());
-        cartItemDTOToUpdate.setProductId(cartItemDTO.getProductId());
-        cartItemDTOToUpdate.setQuantity(cartItemDTO.getQuantity());
-        return updateCartItem(cartItemDTOToUpdate);
+        return updateCartItem(cartItemDTO);
     }
 
     @Override
     public void deleteCartItemFromCartForCurrentUser(int cartItemId) {
         CartDTO myCartDTO = getCartDTOForCurrentUser();
-        if (myCartDTO.getCartId() != cartItemId) {
+        CartItemDTO cartItemDTO = getCartItemDTOForCurrentUserByCartItemId(cartItemId);
+        if (cartItemDTO.getCartId() != myCartDTO.getCartId()) {
             throw new AccessDeniedException("You are not allowed to delete this cart item");
         }
         deleteCartItemById(cartItemId);
+    }
+
+    @Override
+    public double getCartTotalForCurrentUser() {
+        CartDTO myCartDTO = getCartDTOForCurrentUser();
+        return getCartTotal(myCartDTO.getCartId());
     }
 }

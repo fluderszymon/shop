@@ -29,15 +29,14 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final CartRepository cartRepository;
 
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderMapper orderMapper,
                             OrderItemRepository orderItemRepository, OrderItemMapper orderItemMapper,
                             CartService cartService, ProductService productService,
-                            UserService userService,
-                            ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
+                            UserService userService, ProductRepository productRepository, 
+                            UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.orderItemRepository = orderItemRepository;
@@ -47,7 +46,6 @@ public class OrderServiceImpl implements OrderService {
         this.userService = userService;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
-        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -152,7 +150,6 @@ public class OrderServiceImpl implements OrderService {
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setCart(null);
-        cartRepository.deleteById(cartId);
     }
 
     private void addOrderItemFromCartItem(CartItemDTO cartItemDTO, int orderId) {
