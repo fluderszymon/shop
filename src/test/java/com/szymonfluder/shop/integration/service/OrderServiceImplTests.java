@@ -22,10 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
-        UserServiceImpl.class, UserMapperImpl.class,
-        CartServiceImpl.class, CartMapperImpl.class,
-        CartItemMapperImpl.class,
-        ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
+        UserServiceImpl.class, UserMapperImpl.class, CartServiceImpl.class, 
+        CartMapperImpl.class, CartItemMapperImpl.class, ProductServiceImpl.class, 
+        ProductMapperImpl.class, CartAuthServiceImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests {
 
@@ -48,10 +47,6 @@ public class OrderServiceImplTests {
         return userService.addUser(new UserRegisterDTO("User", "user@outlook.com", "password", "Address"));
     }
 
-    private CartDTO addCartToDatabase(int userId) {
-        return cartService.addCart(userId);
-    }
-
     private void addCartItemToDatabase() {
         cartService.addCartItem(new CartItemDTO(0, 1, 1, 10));
     }
@@ -62,7 +57,7 @@ public class OrderServiceImplTests {
 
     private void addOrderToDatabase() {
         UserDTO addedUserDTO = addUserToDatabaseWithSufficientBalance();
-        CartDTO addedCartDTO = addCartToDatabase(addedUserDTO.getUserId());
+        CartDTO addedCartDTO = cartService.getCartById(1);
         addProductToDatabase();
         addCartItemToDatabase();
 
@@ -79,18 +74,23 @@ public class OrderServiceImplTests {
 
     @Test
     void checkout_shouldCompleteCheckout() {
-        addOrderToDatabase();
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartById(1));
-        assertThat(exception.getMessage()).isEqualTo("Cart not found");
+        addUserToDatabaseWithSufficientBalance();
+        CartDTO cart = cartService.getCartById(1);
+        addProductToDatabase();
+        addCartItemToDatabase();
+        orderService.checkout(1, cart.getCartId());
 
+        assertThat(orderService.getOrderById(1)).isNotNull();
+        assertThat(orderService.getAllOrderItemsByOrderId(1)).isNotNull();
+        assertThat(userService.getUserBalance(1)).isEqualTo(0.00);
+        assertThat(cartService.getAllCartItemsByCartId(1)).isEqualTo(List.of());
     }
 
     @Test
     void checkout_shouldThrowExceptionWhenCartIsEmpty() {
-        User addedUser = addUserToDatabaseWithInsufficientBalance();
-        int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
+        UserDTO addedUserDTO = addUserToDatabaseWithSufficientBalance();
+        int userId = addedUserDTO.getUserId();
+        CartDTO cart = cartService.getCartById(1);
         int cartId = cart.getCartId();
 
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -102,7 +102,7 @@ public class OrderServiceImplTests {
     void checkout_shouldThrowExceptionWhenBalanceIsInsufficient() {
         User addedUser = addUserToDatabaseWithInsufficientBalance();
         int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
+        CartDTO cart = cartService.getCartById(1);
         int cartId = cart.getCartId();
         addProductToDatabase();
         addCartItemToDatabase();
@@ -116,7 +116,7 @@ public class OrderServiceImplTests {
     void checkout_shouldThrowExceptionWhenStockIsInsufficient() {
         User addedUser = addUserToDatabaseWithInsufficientBalance();
         int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
+        CartDTO cart = cartService.getCartById(1);
         int cartId = cart.getCartId();
         Product addedProduct = addProductToDatabase();
         addCartItemToDatabase();

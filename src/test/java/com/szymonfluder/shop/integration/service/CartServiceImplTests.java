@@ -2,9 +2,9 @@ package com.szymonfluder.shop.integration.service;
 
 import com.szymonfluder.shop.dto.*;
 import com.szymonfluder.shop.entity.Product;
-import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
+import com.szymonfluder.shop.service.impl.CartAuthServiceImpl;
 import com.szymonfluder.shop.service.impl.CartServiceImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DataJpaTest
 @Import({CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class, ProductServiceImpl.class, ProductMapperImpl.class,
-        UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
+        UserServiceImpl.class, UserMapperImpl.class, CartAuthServiceImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CartServiceImplTests {
 
@@ -36,8 +36,8 @@ public class CartServiceImplTests {
     private UserServiceImpl userService;
 
     private CartDTO addCartToDatabase() {
-        User addedUser = userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        return cartService.addCart(addedUser.getUserId());
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        return cartService.getCartById(1);
     }
 
     private CartDTO getCartMock() {
@@ -130,10 +130,9 @@ public class CartServiceImplTests {
     }
 
     private CartItemDTO addCartItemToDatabase() {
-        User addedUser = userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        CartDTO cartDTO = cartService.addCart(addedUser.getUserId());
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
         Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
-        return cartService.addCartItem(new CartItemDTO(0, cartDTO.getCartId(), product.getProductId(), 10));
+        return cartService.addCartItem(new CartItemDTO(0, 1, product.getProductId(), 10));
     }
 
     private CartItemDTO getCartItemDTOMock() {

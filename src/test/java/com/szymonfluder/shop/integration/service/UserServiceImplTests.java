@@ -35,7 +35,7 @@ public class UserServiceImplTests {
     }
 
     private UserDTO getUserDTOMock() {
-        return new UserDTO(1, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
+        return new UserDTO(1, "User", "user@outlook.com", "USER", 1, "Address", 0.00);
     }
 
     @Test

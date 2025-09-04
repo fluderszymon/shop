@@ -4,13 +4,14 @@ import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.entity.Cart;
 import com.szymonfluder.shop.exception.UsernameTakenException;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
 import com.szymonfluder.shop.security.JWTService;
-import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.szymonfluder.shop.repository.CartRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -25,19 +26,20 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final CartService cartService;
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
+    private final CartRepository cartRepository;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper, CartService cartService,
-                           JWTService jwtService, AuthenticationManager authenticationManager) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
+                           JWTService jwtService, AuthenticationManager authenticationManager, 
+                           CartRepository cartRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
-        this.cartService = cartService;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -67,7 +69,9 @@ public class UserServiceImpl implements UserService {
         user.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
         user.setRole("USER");
         User savedUser = userRepository.save(user);
-        cartService.addCart(user.getUserId());
+        Cart cart = new Cart();
+        cart.setUser(savedUser);
+        cartRepository.save(cart);
         return savedUser;
     }
 
@@ -106,7 +110,10 @@ public class UserServiceImpl implements UserService {
             userToAdd.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
             userToAdd.setRole("USER");
             User savedUser = userRepository.save(userToAdd);
-            cartService.addCart(savedUser.getUserId());
+
+            Cart cart = new Cart();
+            cart.setUser(savedUser);
+            cartRepository.save(cart);
 
         } else {
             throw new UsernameTakenException(userRegisterDTO.getUsername());
