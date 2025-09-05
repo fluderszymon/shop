@@ -23,11 +23,13 @@ public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
     private final JWTFilter jwtFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     @Autowired
-    public SecurityConfig(UserDetailsService userDetailsService, JWTFilter jwtFilter) {
+    public SecurityConfig(UserDetailsService userDetailsService, JWTFilter jwtFilter, RateLimitFilter rateLimitFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtFilter = jwtFilter;
+        this.rateLimitFilter = rateLimitFilter;
     }
 
     @Bean
@@ -40,13 +42,19 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitFilter, jwtFilter.getClass())
                 .build();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+        provider.setPasswordEncoder(passwordEncoder());
         provider.setUserDetailsService(userDetailsService);
         return provider;
     }

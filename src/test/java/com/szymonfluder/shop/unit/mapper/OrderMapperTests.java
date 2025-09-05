@@ -1,7 +1,6 @@
 package com.szymonfluder.shop.unit.mapper;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import com.szymonfluder.shop.entity.Order;
 import com.szymonfluder.shop.entity.User;
