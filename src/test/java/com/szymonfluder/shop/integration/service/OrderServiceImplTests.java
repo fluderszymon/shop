@@ -5,6 +5,7 @@ import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
+import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.impl.*;
@@ -12,20 +13,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
-        UserServiceImpl.class, UserMapperImpl.class,
-        CartServiceImpl.class, CartMapperImpl.class,
-        CartItemMapperImpl.class,
-        ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
+        UserServiceImpl.class, UserMapperImpl.class, CartServiceImpl.class, 
+        CartMapperImpl.class, CartItemMapperImpl.class, ProductServiceImpl.class, 
+        ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests {
 
@@ -37,7 +40,9 @@ public class OrderServiceImplTests {
     private CartService cartService;
     @Autowired
     private ProductService productService;
-
+    @Autowired
+    private JWTService jwtService;
+    
     private UserDTO addUserToDatabaseWithSufficientBalance() {
         User adddedUser = userService.addUser(new UserRegisterDTO("User", "user@outlook.com", "password", "Address"));
         userService.updateUserBalance(adddedUser.getUserId(), 100.00);
@@ -46,10 +51,6 @@ public class OrderServiceImplTests {
 
     private User addUserToDatabaseWithInsufficientBalance() {
         return userService.addUser(new UserRegisterDTO("User", "user@outlook.com", "password", "Address"));
-    }
-
-    private CartDTO addCartToDatabase(int userId) {
-        return cartService.addCart(userId);
     }
 
     private void addCartItemToDatabase() {
@@ -61,12 +62,12 @@ public class OrderServiceImplTests {
     }
 
     private void addOrderToDatabase() {
-        UserDTO addedUserDTO = addUserToDatabaseWithSufficientBalance();
-        CartDTO addedCartDTO = addCartToDatabase(addedUserDTO.getUserId());
+        addUserToDatabaseWithSufficientBalance();
         addProductToDatabase();
         addCartItemToDatabase();
 
-        orderService.checkout(addedUserDTO.getUserId(), addedCartDTO.getUserId());
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        orderService.checkout();
     }
 
     private OrderDTO getOrderDTOMock() {
@@ -79,52 +80,52 @@ public class OrderServiceImplTests {
 
     @Test
     void checkout_shouldCompleteCheckout() {
-        addOrderToDatabase();
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartById(1));
-        assertThat(exception.getMessage()).isEqualTo("Cart not found");
+        addUserToDatabaseWithSufficientBalance();
+        addProductToDatabase();
+        addCartItemToDatabase();
 
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        orderService.checkout();
+
+        assertThat(orderService.getOrderById(1)).isNotNull();
+        assertThat(orderService.getAllOrderItemsByOrderId(1)).isNotNull();
+        assertThat(userService.getUserBalance(1)).isEqualTo(0.00);
+        assertThat(cartService.getAllCartItemsByCartId(1)).isEqualTo(List.of());
     }
 
     @Test
     void checkout_shouldThrowExceptionWhenCartIsEmpty() {
-        User addedUser = addUserToDatabaseWithInsufficientBalance();
-        int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
-        int cartId = cart.getCartId();
-
+        addUserToDatabaseWithSufficientBalance();
+        
+        when(jwtService.getCurrentUsername()).thenReturn("User");
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> orderService.checkout(userId, cartId));
+                () -> orderService.checkout());
         assertThat(exception.getMessage()).isEqualTo("Cart is empty");
     }
 
     @Test
     void checkout_shouldThrowExceptionWhenBalanceIsInsufficient() {
-        User addedUser = addUserToDatabaseWithInsufficientBalance();
-        int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
-        int cartId = cart.getCartId();
+        addUserToDatabaseWithInsufficientBalance();
         addProductToDatabase();
         addCartItemToDatabase();
 
+        when(jwtService.getCurrentUsername()).thenReturn("User");
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> orderService.checkout(userId, cartId));
+                () -> orderService.checkout());
         assertThat(exception.getMessage()).isEqualTo("Insufficient balance");
     }
 
     @Test
     void checkout_shouldThrowExceptionWhenStockIsInsufficient() {
-        User addedUser = addUserToDatabaseWithInsufficientBalance();
-        int userId = addedUser.getUserId();
-        CartDTO cart = addCartToDatabase(userId);
-        int cartId = cart.getCartId();
+        addUserToDatabaseWithInsufficientBalance();
         Product addedProduct = addProductToDatabase();
         addCartItemToDatabase();
         addedProduct.setStock(0);
         productService.updateProduct(addedProduct);
 
+        when(jwtService.getCurrentUsername()).thenReturn("User");
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> orderService.checkout(userId, cartId));
+                () -> orderService.checkout());
         assertThat(exception.getMessage()).isEqualTo("Not enough products in stock");
     }
 
@@ -167,5 +168,65 @@ public class OrderServiceImplTests {
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItemsByOrderId(1);
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
         assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
+    }
+
+    @Test
+    void getOrdersForCurrentUser_shouldGetAllOrderDTOsForCurrentUser() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        List<OrderDTO> actualOrderDTOList = orderService.getOrdersForCurrentUser();
+        List<OrderDTO> expectedOrderDTOList = List.of(getOrderDTOMock());
+
+        assertThat(actualOrderDTOList).isEqualTo(expectedOrderDTOList);
+    }
+
+    @Test
+    void getOrderItemsForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsForCurrentUser();
+        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
+
+        assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
+    }
+
+    @Test
+    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
+        addOrderToDatabase();
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsInOrderByOrderIdForCurrentUser(1);
+        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
+
+        assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
+    }
+
+    @Test
+    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldThrowAccessDeniedExceptionWhenNotOwner() {
+        addOrderToDatabase();
+        userService.addUser(new UserRegisterDTO("OtherUser", "other@outlook.com", "password", "Address"));
+        
+        when(jwtService.getCurrentUsername()).thenReturn("OtherUser");
+        assertThrows(AccessDeniedException.class,
+                () -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(1));
+    }
+
+    @Test
+    void validateOrderOwnership_shouldAllowAccessWhenUserOwnsOrder() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        
+        assertThatCode(() -> orderService.validateOrderOwnership(1))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void validateOrderOwnership_shouldThrowAccessDeniedExceptionWhenUserDoesNotOwnOrder() {
+        addOrderToDatabase();
+        
+        when(jwtService.getCurrentUsername()).thenReturn("OtherUser");
+        userService.addUser(new UserRegisterDTO("OtherUser", "other@outlook.com", "password", "Address"));
+        
+        assertThrows(AccessDeniedException.class,
+                () -> orderService.validateOrderOwnership(1));
     }
 }

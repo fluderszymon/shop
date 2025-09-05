@@ -2,10 +2,12 @@ package com.szymonfluder.shop.controller;
 
 import com.szymonfluder.shop.dto.InvoiceDTO;
 import com.szymonfluder.shop.service.InvoiceService;
+import com.szymonfluder.shop.service.OrderService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,14 +21,18 @@ import java.io.IOException;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final OrderService orderService;
 
-    public InvoiceController(InvoiceService invoiceService) {
+    public InvoiceController(InvoiceService invoiceService, OrderService orderService) {
         this.invoiceService = invoiceService;
+        this.orderService = orderService;
     }
 
     @GetMapping("/{orderId}/pdf")
+    @PreAuthorize("hasAuthority('USER')")
     public ResponseEntity<byte[]> generateInvoicePdf(@PathVariable int orderId) {
         try {
+            orderService.validateOrderOwnership(orderId);
             InvoiceDTO invoiceDTO = invoiceService.createInvoiceDTO(orderId);
             if (invoiceDTO == null) {
                 return ResponseEntity.notFound().build();

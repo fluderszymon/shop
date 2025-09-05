@@ -13,6 +13,4 @@ public class CartItemDTO {
     private int cartId;
     private int productId;
     private int quantity;
-
-
 }

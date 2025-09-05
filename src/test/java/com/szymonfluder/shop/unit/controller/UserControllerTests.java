@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -56,6 +57,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void getAllUsers_shouldReturnAllUsers() throws Exception {
         List<UserDTO> users = List.of(new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0));
         when(userService.getAllUsers()).thenReturn(users);
@@ -71,6 +73,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void getAllUsers_shouldReturnEmptyList() throws Exception {
         when(userService.getAllUsers()).thenReturn(List.of());
 
@@ -84,6 +87,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void getUserByUsername_shouldReturnUser() throws Exception {
         UserDTO userDTO = new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0);
         when(userService.getUserByUsername("user")).thenReturn(userDTO);
@@ -99,6 +103,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void addUser_shouldReturnCreatedUser() throws Exception {
         User user = new User(1, "user", "user@outlook.com", "password", "USER", null, "User's Address", 0.0);
         UserRegisterDTO userRegisterDTO = new UserRegisterDTO("user", "user@outlook.com", "password", "User's Address");
@@ -117,6 +122,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void deleteUserById_shouldDeleteUser() throws Exception {
         doNothing().when(userService).deleteUserById(1);
 
@@ -128,6 +134,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void updateUser_shouldReturnUpdatedUser() throws Exception {
         User updatedUser = new User(1, "updatedUser", "updated_user@outlook.com", "updatedPassword", "ADMIN", null, "Updated Address", 500.0);
         when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
@@ -145,6 +152,7 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities=("ADMIN"))
     void deleteUserById_shouldHandleInvalidIdFormat() throws Exception {
         mockMvc.perform(delete("/users/invalid")
                 .header("Authorization", AUTH_HEADER))

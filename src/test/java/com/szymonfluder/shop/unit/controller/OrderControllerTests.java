@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -50,6 +51,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllOrders_shouldReturnAllOrders() throws Exception {
         List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)));
         when(orderService.getAllOrders()).thenReturn(orders);
@@ -65,6 +67,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllOrders_shouldReturnEmptyList() throws Exception {
         when(orderService.getAllOrders()).thenReturn(List.of());
 
@@ -78,6 +81,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getOrderById_shouldReturnOrder() throws Exception {
         OrderDTO orderDTO = new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15));
         when(orderService.getOrderById(1)).thenReturn(orderDTO);
@@ -93,6 +97,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllOrderItems_shouldReturnAllOrderItems() throws Exception {
         List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 2, 1, "Product", 2, 29.99));
         when(orderService.getAllOrderItems()).thenReturn(orderItems);
@@ -108,6 +113,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllOrderItems_shouldReturnEmptyList() throws Exception {
         when(orderService.getAllOrderItems()).thenReturn(List.of());
 
@@ -121,6 +127,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getOrderItemsInOrderByOrderId_shouldReturnOrderItems() throws Exception {
         List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(orderItems);
@@ -136,6 +143,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void getOrderItemsInOrderByOrderId_shouldReturnEmptyList() throws Exception {
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(List.of());
 
@@ -149,13 +157,75 @@ public class OrderControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"USER"})
     void checkout_shouldProcessCheckout() throws Exception {
-        doNothing().when(orderService).checkout(1, 1);
+        doNothing().when(orderService).checkout();
 
-        mockMvc.perform(post("/orders/checkout/1/1")
+        mockMvc.perform(post("/orders/checkout")
                 .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isOk());
 
-        verify(orderService, times(1)).checkout(1, 1);
+        verify(orderService, times(1)).checkout();
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"})
+    void getMyOrders_shouldReturnUserOrders() throws Exception {
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)));
+        when(orderService.getOrdersForCurrentUser()).thenReturn(orders);
+
+        mockMvc.perform(get("/orders/my-orders")
+                .header("Authorization", AUTH_HEADER))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].orderId").value(1))
+                .andExpect(jsonPath("$[0].userId").value(1));
+
+        verify(orderService, times(1)).getOrdersForCurrentUser();
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"})
+    void getOrderItemsInMyOrder_shouldReturnOrderItems() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
+        when(orderService.getOrderItemsInOrderByOrderIdForCurrentUser(1)).thenReturn(orderItems);
+
+        mockMvc.perform(get("/orders/my-orders/1")
+                .header("Authorization", AUTH_HEADER))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].orderItemId").value(1))
+                .andExpect(jsonPath("$[0].orderId").value(1));
+
+        verify(orderService, times(1)).getOrderItemsInOrderByOrderIdForCurrentUser(1);
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"})
+    void getMyOrderItems_shouldReturnUserOrderItems() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
+        when(orderService.getOrderItemsForCurrentUser()).thenReturn(orderItems);
+
+        mockMvc.perform(get("/orders/my-orders/order-items")
+                .header("Authorization", AUTH_HEADER))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].orderItemId").value(1))
+                .andExpect(jsonPath("$[0].orderId").value(1));
+
+        verify(orderService, times(1)).getOrderItemsForCurrentUser();
+    }
+
+    @Test
+    @WithMockUser(authorities = {"USER"})
+    void getOrderItemsInMyOrder_shouldThrowAccessDeniedException() throws Exception {
+        when(orderService.getOrderItemsInOrderByOrderIdForCurrentUser(999))
+                .thenThrow(new org.springframework.security.access.AccessDeniedException("You are not allowed to access this order"));
+
+        mockMvc.perform(get("/orders/my-orders/999")
+                .header("Authorization", AUTH_HEADER))
+                .andExpect(status().isForbidden());
+
+        verify(orderService, times(1)).getOrderItemsInOrderByOrderIdForCurrentUser(999);
     }
 }
