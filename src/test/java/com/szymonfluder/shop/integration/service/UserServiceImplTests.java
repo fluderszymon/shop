@@ -3,6 +3,7 @@ package com.szymonfluder.shop.integration.service;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 
@@ -12,8 +13,10 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.exception.UsernameTakenException;
 import com.szymonfluder.shop.mapper.UserMapperImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
 import org.springframework.test.annotation.DirtiesContext;
@@ -123,5 +126,32 @@ public class UserServiceImplTests {
         assertThat(updatedUser.getBalance()).isEqualTo(100.00);
         
         assertThat(passwordEncoder.matches("updatedPassword", updatedUser.getPassword())).isTrue();
+    }
+
+    @Test
+    void register_shouldCreateUserSuccessfully() throws Exception {
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("User", "user@outlook.com", "password", "Address");
+        userService.register(userRegisterDTO);
+
+        UserDTO savedUser = userService.getUserByUsername("User");
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getUsername()).isEqualTo("User");
+        assertThat(savedUser.getRole()).isEqualTo("USER");
+    }
+
+    @Test
+    void register_shouldThrowExceptionWhenUsernameAlreadyExists() {
+        addUserToDatabase();
+        UserRegisterDTO secondUser = new UserRegisterDTO("User", "user@outlook.com", "password", "Address");
+
+        assertThrows(UsernameTakenException.class, () -> userService.register(secondUser));
+    }
+
+    @Test
+    void verify_shouldReturnErrorWhenUsernameDoesNotExist() {
+        UserLoginDTO userLoginDTO = new UserLoginDTO("NonExistingUsername", "password");
+
+        String result = userService.verify(userLoginDTO);
+        assertThat(result).isEqualTo("Could not verify user");
     }
 }
