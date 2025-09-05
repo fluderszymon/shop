@@ -5,6 +5,7 @@ import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
+import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.impl.*;
@@ -19,12 +20,13 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
         UserServiceImpl.class, UserMapperImpl.class, CartServiceImpl.class, 
         CartMapperImpl.class, CartItemMapperImpl.class, ProductServiceImpl.class, 
-        ProductMapperImpl.class, CartAuthServiceImpl.class, TestConfig.class})
+        ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests {
 
@@ -36,7 +38,9 @@ public class OrderServiceImplTests {
     private CartService cartService;
     @Autowired
     private ProductService productService;
-
+    @Autowired
+    private JWTService jwtService;
+    
     private UserDTO addUserToDatabaseWithSufficientBalance() {
         User adddedUser = userService.addUser(new UserRegisterDTO("User", "user@outlook.com", "password", "Address"));
         userService.updateUserBalance(adddedUser.getUserId(), 100.00);
@@ -166,6 +170,26 @@ public class OrderServiceImplTests {
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItemsByOrderId(1);
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
+        assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
+    }
+
+    @Test
+    void getOrdersForCurrentUser_shouldGetAllOrderDTOsForCurrentUser() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        List<OrderDTO> actualOrderDTOList = orderService.getOrdersForCurrentUser();
+        List<OrderDTO> expectedOrderDTOList = List.of(getOrderDTOMock());
+
+        assertThat(actualOrderDTOList).isEqualTo(expectedOrderDTOList);
+    }
+
+    @Test
+    void getOrderItemsForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsForCurrentUser();
+        List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
+
         assertThat(actualOrderItemDTOList).isEqualTo(expectedOrderItemDTOList);
     }
 }

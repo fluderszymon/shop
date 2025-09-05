@@ -10,10 +10,10 @@ import com.szymonfluder.shop.mapper.CartMapper;
 import com.szymonfluder.shop.repository.CartItemRepository;
 import com.szymonfluder.shop.repository.CartRepository;
 import com.szymonfluder.shop.service.CartService;
-import com.szymonfluder.shop.service.CartAuthService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,19 +31,17 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final CartItemMapper cartItemMapper;
     private final UserService userService;
-    private final CartAuthService cartAuthService;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, CartMapper cartMapper,
                            ProductService productService, CartItemRepository cartItemRepository,
-                           CartItemMapper cartItemMapper, UserService userService, CartAuthService cartAuthService) {
+                           CartItemMapper cartItemMapper, UserService userService) {
         this.cartRepository = cartRepository;
         this.cartMapper = cartMapper;
         this.productService = productService;
         this.cartItemRepository = cartItemRepository;
         this.cartItemMapper = cartItemMapper;
         this.userService = userService;
-        this.cartAuthService = cartAuthService;
     }
 
     // methods for "/carts" endpoint
@@ -158,7 +156,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId) {
-        cartAuthService.validateCartItemOwnership(cartItemId);
+        validateCartItemOwnership(cartItemId);
         return getCartItemById(cartItemId);
     }
 
@@ -170,19 +168,19 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItemDTO addCartItemToCartForCurrentUser(CartItemDTO cartItemDTO) {
-        cartAuthService.validateCartItemOwnership(cartItemDTO);
+        validateCartItemOwnership(cartItemDTO);
         return addCartItem(cartItemDTO);
     }
 
     @Override
     public CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO) {
-        cartAuthService.validateCartItemOwnership(cartItemDTO);
+        validateCartItemOwnership(cartItemDTO);
         return updateCartItem(cartItemDTO);
     }
 
     @Override
     public void deleteCartItemFromCartForCurrentUser(int cartItemId) {
-        cartAuthService.validateCartItemOwnership(cartItemId);
+        validateCartItemOwnership(cartItemId);
         deleteCartItemById(cartItemId);
     }
 
@@ -190,5 +188,27 @@ public class CartServiceImpl implements CartService {
     public double getCartTotalForCurrentUser() {
         CartDTO myCartDTO = getCartDTOForCurrentUser();
         return getCartTotal(myCartDTO.getCartId());
+    }
+
+    private void validateCartItemOwnership(int cartItemId) {
+        CartItem cartItem = cartItemRepository.findById(cartItemId)
+                .orElseThrow(() -> new RuntimeException("CartItem not found"));
+        
+        validateCartOwnership(cartItem.getCart().getCartId());
+    }
+
+    private void validateCartItemOwnership(CartItemDTO cartItemDTO) {
+        validateCartOwnership(cartItemDTO.getCartId());
+    }
+    
+    private void validateCartOwnership(int cartId) {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        boolean isOwner = cartRepository.findCartDTOByUserId(currentUser.getUserId())
+                .map(cart -> cart.getCartId() == cartId)
+                .orElse(false);
+                
+        if (!isOwner) {
+            throw new AccessDeniedException("You are not allowed to access this cart item");
+        }
     }
 }

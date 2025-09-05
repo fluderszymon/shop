@@ -193,4 +193,22 @@ public class OrderServiceImpl implements OrderService {
         }
         return result;
     }
+
+    @Override
+    public List<OrderDTO> getOrdersForCurrentUser() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        return orderRepository.findAllOrdersByUserId(currentUser.getUserId())
+                .stream()
+                .map(orderMapper::orderToOrderDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<OrderItemDTO> getOrderItemsForCurrentUser() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        return orderItemRepository.findAllOrderItemsByUserId(currentUser.getUserId())
+                .stream()
+                .map(orderItemMapper::orderItemToOrderItemDTO)
+                .collect(Collectors.toList());
+    }
 }

@@ -4,7 +4,7 @@ import com.szymonfluder.shop.dto.*;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.*;
-import com.szymonfluder.shop.service.impl.CartAuthServiceImpl;
+import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.service.impl.CartServiceImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
@@ -18,11 +18,13 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+import org.springframework.security.access.AccessDeniedException;
 
 @DataJpaTest
 @Import({CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class, ProductServiceImpl.class, ProductMapperImpl.class,
-        UserServiceImpl.class, UserMapperImpl.class, CartAuthServiceImpl.class, TestConfig.class})
+        UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CartServiceImplTests {
 
@@ -34,6 +36,9 @@ public class CartServiceImplTests {
 
     @Autowired
     private UserServiceImpl userService;
+
+    @Autowired
+    private JWTService jwtService;
 
     private CartDTO addCartToDatabase() {
         userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
@@ -114,19 +119,11 @@ public class CartServiceImplTests {
 
     @Test
     void getCartTotal_shouldReturnCartTotal() {
-        CartDTO addedCartDTO = addCartToDatabase();
-        int cartId = addedCartDTO.getCartId();
-        ProductCreateDTO product1 = new ProductCreateDTO("Product 1", "Description 1", 10.0, 10);
-        ProductCreateDTO product2 = new ProductCreateDTO("Product 2", "Description 2", 15.0, 10);
-        productService.addProduct(product1);
-        productService.addProduct(product2);
-        CartItemDTO cartItem1 = new CartItemDTO(0, 1, 1, 2);
-        CartItemDTO cartItem2 = new CartItemDTO(0, 1, 2, 1);
-        cartService.addCartItem(cartItem1);
-        cartService.addCartItem(cartItem2);
+        addCartItemToDatabase();
+        int cartId = 1;
 
         double cartTotal = cartService.getCartTotal(cartId);
-        assertThat(cartTotal).isEqualTo(35.0);
+        assertThat(cartTotal).isEqualTo(100.0);
     }
 
     private CartItemDTO addCartItemToDatabase() {
@@ -223,4 +220,138 @@ public class CartServiceImplTests {
 
         assertThat(updatedCartItemDTO).isEqualTo(cartItemDTOPassedToUpdateMethod);
     }
+
+    @Test
+    void addCartItem_shouldThrowExceptionWhenInsufficientStock() {
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 5));
+        
+        CartItemDTO cartItemDTO = new CartItemDTO(0, 1, product.getProductId(), 10);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.addCartItem(cartItemDTO));
+
+        assertThat(exception.getMessage()).isEqualTo("Not enough products in stock");
+    }
+
+    @Test
+    void getCartTotalForCurrentUser_shouldReturnCartTotal() {
+        addCartItemToDatabase();
+        Product product2 = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 15.00, 100));
+        CartItemDTO cartItem2 = new CartItemDTO(0, 1, product2.getProductId(), 2);
+        cartService.addCartItem(cartItem2);
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        double cartTotal = cartService.getCartTotalForCurrentUser();
+        assertThat(cartTotal).isEqualTo(130.0);
+    }
+
+    @Test
+    void getCartDTOForCurrentUser_shouldReturnCartDTO() {
+        addCartToDatabase();
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        CartDTO actualCart = cartService.getCartDTOForCurrentUser();
+        CartDTO expectedCart = getCartMock();
+
+        assertThat(actualCart).isEqualTo(expectedCart);
+    }
+
+    @Test
+    void getCartDTOForCurrentUser_shouldThrowExceptionWhenCartNotFound() {
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        cartService.deleteCartById(1);
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.getCartDTOForCurrentUser());
+
+        assertThat(exception.getMessage()).isEqualTo("Cart not found for current user");
+    }
+
+    @Test
+    void getCartItemsInCartForCurrentUser_shouldReturnCartItems() {
+        addCartItemToDatabase();
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        List<CartItemDTO> actualCartItems = cartService.getCartItemsInCartForCurrentUser();
+        List<CartItemDTO> expectedCartItems = List.of(getCartItemDTOMock());
+
+        assertThat(actualCartItems).isEqualTo(expectedCartItems);
+    }
+
+    @Test
+    void addCartItemToCartForCurrentUser_shouldAddCartItem() {
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
+        CartItemDTO cartItemDTO = new CartItemDTO(0, 1, product.getProductId(), 5);
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        CartItemDTO addedCartItemDTO = cartService.addCartItemToCartForCurrentUser(cartItemDTO);
+        CartItemDTO expectedCartItemDTO = new CartItemDTO(1, 1, product.getProductId(), 5);
+
+        assertThat(addedCartItemDTO).isEqualTo(expectedCartItemDTO);
+    }
+
+    @Test
+    void updateCartItemInCartForCurrentUser_shouldUpdateCartItem() {
+        addCartItemToDatabase();
+        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        CartItemDTO updatedCartItemDTO = cartService.updateCartItemInCartForCurrentUser(cartItemDTOPassedToUpdateMethod);
+
+        assertThat(updatedCartItemDTO).isEqualTo(cartItemDTOPassedToUpdateMethod);
+    }
+
+    @Test
+    void deleteCartItemFromCartForCurrentUser_shouldDeleteCartItem() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        int cartItemId = addedCartItemDTO.getCartItemId();
+        assertThat(cartService.getCartItemById(cartItemId)).isNotNull();
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        cartService.deleteCartItemFromCartForCurrentUser(cartItemId);
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.getCartItemById(cartItemId));
+        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+    }
+
+    @Test
+    void getCartItemDTOForCurrentUserByCartItemId_shouldReturnCartItemDTO() {
+        CartItemDTO addedCartItemDTO = addCartItemToDatabase();
+        int cartItemId = addedCartItemDTO.getCartItemId();
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        CartItemDTO actualCartItemDTO = cartService.getCartItemDTOForCurrentUserByCartItemId(cartItemId);
+        CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
+
+        assertThat(actualCartItemDTO).isEqualTo(expectedCartItemDTO);
+    }
+
+    @Test
+    void getCartItemDTOForCurrentUserByCartItemId_shouldThrowExceptionWhenCartItemNotFound() {
+        addCartToDatabase();
+        int nonExistingCartItemId = 99;
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> cartService.getCartItemDTOForCurrentUserByCartItemId(nonExistingCartItemId));
+
+        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+    }
+
+    @Test
+    void addCartItemToCartForCurrentUser_shouldThrowExceptionWhenAccessDenied() {
+        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
+        userService.addUser(new UserRegisterDTO("OtherUser", "otheruser@outlook.com", "password", "Address"));
+
+        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
+        CartItemDTO cartItemDTO = new CartItemDTO(0, 2, product.getProductId(), 5);
+
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        AccessDeniedException exception = assertThrows(AccessDeniedException.class,
+                () -> cartService.addCartItemToCartForCurrentUser(cartItemDTO));
+
+        assertThat(exception.getMessage()).isEqualTo("You are not allowed to access this cart item");
+    }   
 }

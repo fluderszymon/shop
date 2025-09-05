@@ -56,7 +56,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllCarts_shouldReturnAllCarts() throws Exception {
         List<CartDTO> carts = List.of(new CartDTO(1, 1));
         when(cartService.getAllCarts()).thenReturn(carts);
@@ -72,7 +72,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getAllCarts_shouldReturnEmptyList() throws Exception {
         when(cartService.getAllCarts()).thenReturn(List.of());
 
@@ -86,7 +86,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getCartById_shouldReturnCart() throws Exception {
         CartDTO cartDTO = new CartDTO(1, 1);
         when(cartService.getCartById(1)).thenReturn(cartDTO);
@@ -102,7 +102,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void addCart_shouldReturnCreatedCart() throws Exception {
         CartDTO cartDTO = new CartDTO(1, 1);
         when(cartService.addCart(1)).thenReturn(cartDTO);
@@ -118,7 +118,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void deleteCartById_shouldDeleteCart() throws Exception {
         doNothing().when(cartService).deleteCartById(1);
 
@@ -130,7 +130,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void updateCart_shouldReturnUpdatedCart() throws Exception {
         CartDTO cartDTO = new CartDTO(1, 2);
         when(cartService.updateCart(any(CartDTO.class))).thenReturn(cartDTO);
@@ -148,7 +148,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getCartItemsInCartByCartId_shouldReturnCartItems() throws Exception {
         List<CartItemDTO> cartItems = List.of(new CartItemDTO(1, 1, 1, 2));
         when(cartService.getAllCartItemsByCartId(1)).thenReturn(cartItems);
@@ -164,7 +164,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getCartItemsInCartByCartId_shouldReturnEmptyList() throws Exception {
         when(cartService.getAllCartItemsByCartId(1)).thenReturn(List.of());
 
@@ -178,7 +178,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getCartItemById_shouldReturnCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 2);
         when(cartService.getCartItemById(1)).thenReturn(cartItemDTO);
@@ -194,7 +194,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void addCartItem_shouldReturnCreatedCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 2);
         when(cartService.addCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
@@ -212,7 +212,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void updateCartItem_shouldReturnUpdatedCartItem() throws Exception {
         CartItemDTO cartItemDTO = new CartItemDTO(1, 1, 1, 3);
         when(cartService.updateCartItem(any(CartItemDTO.class))).thenReturn(cartItemDTO);
@@ -230,7 +230,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void deleteCartItem_shouldDeleteCartItem() throws Exception {
         doNothing().when(cartService).deleteCartItemById(1);
 
@@ -242,7 +242,7 @@ public class CartControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "admin", authorities = {"ADMIN"})
+    @WithMockUser(authorities = {"ADMIN"})
     void getCartTotal_shouldReturnTotal() throws Exception {
         when(cartService.getCartTotal(1)).thenReturn(59.97);
 

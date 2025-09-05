@@ -18,4 +18,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Integer> {
             "WHERE oi.order.orderId=?1")
     List<OrderItemDTO> findAllOrderItemsByOrderId(int orderId);
 
+    @Query(value="SELECT oi FROM OrderItem oi WHERE oi.order.user.userId=?1")
+    List<OrderItem> findAllOrderItemsByUserId(int userId);
+
 }

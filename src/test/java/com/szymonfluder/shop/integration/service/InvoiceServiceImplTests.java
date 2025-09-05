@@ -29,7 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Import({UserServiceImpl.class, UserMapperImpl.class, ProductServiceImpl.class,
         ProductMapperImpl.class, OrderServiceImpl.class, OrderMapperImpl.class,
         OrderItemMapperImpl.class, InvoiceServiceImpl.class, CartServiceImpl.class,
-        CartMapperImpl.class, CartItemMapperImpl.class, CartAuthServiceImpl.class, TestConfig.class})
+        CartMapperImpl.class, CartItemMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class InvoiceServiceImplTests {
 

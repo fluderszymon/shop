@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,6 +56,7 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"USER"})
     void getAllProducts_shouldReturnAllProducts() throws Exception {
         List<ProductDTO> products = List.of(new ProductDTO(1, "Product 1", "Description 1", 19.99, 50));
         when(productService.getAllProducts()).thenReturn(products);
@@ -98,6 +100,7 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void addProduct_shouldReturnCreatedProduct() throws Exception {
         Product product = new Product(1, "Test Product", "Test Description", 29.99, 100);
         ProductCreateDTO productCreateDTO = new ProductCreateDTO("Test Product", "Test Description", 29.99, 100);
@@ -116,6 +119,7 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void deleteProductById_shouldDeleteProduct() throws Exception {
         doNothing().when(productService).deleteProductById(1);
 
@@ -127,6 +131,7 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = {"ADMIN"})
     void updateProduct_shouldReturnUpdatedProduct() throws Exception {
         Product updatedProduct = new Product(1, "Updated Product", "Updated Description", 39.99, 150);
         when(productService.updateProduct(any(Product.class))).thenReturn(updatedProduct);

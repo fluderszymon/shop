@@ -15,4 +15,7 @@ public interface OrderService {
 
     void checkout(int userId, int cartId);
 
+    List<OrderDTO> getOrdersForCurrentUser();
+    List<OrderItemDTO> getOrderItemsForCurrentUser();
+
 }
