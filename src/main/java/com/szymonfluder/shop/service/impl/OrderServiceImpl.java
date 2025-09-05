@@ -14,6 +14,7 @@ import com.szymonfluder.shop.service.OrderService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,7 +79,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void checkout(int userId, int cartId) {
+    public void checkout() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        int userId = currentUser.getUserId();
+        int cartId = currentUser.getCartId();
         List<CartItemDTO> cartItemDTOList = cartService.getAllCartItemsByCartId(cartId);
         validateCartNotEmpty(cartItemDTOList);
 
@@ -115,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
+    private void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
                                  Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
                                  double userBalance, double cartTotal) {
 
@@ -144,7 +148,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
+    private void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             cartService.deleteCartItemById(cartItemDTO.getCartItemId());
         }
@@ -175,7 +179,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Map<ProductDTO, CartItemDTO> mapProductsDTOsToCartItemDTOs(List<CartItemDTO> cartItemDTOList) {
-
         List<Integer> cartItemProductIds = extractProductIdsFromCartItemDTOList(cartItemDTOList);
         List<ProductDTO> productDTOList = productService.getProductsByIdList(cartItemProductIds);
 
@@ -202,6 +205,15 @@ public class OrderServiceImpl implements OrderService {
                 .map(orderMapper::orderToOrderDTO)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<OrderItemDTO> getOrderItemsInOrderByOrderIdForCurrentUser(int orderId) {
+        validateOrderOwnership(orderId);
+        return orderItemRepository.findAllOrderItemsInOrderByOrderId(orderId)
+                .stream()
+                .map(orderItemMapper::orderItemToOrderItemDTO)
+                .collect(Collectors.toList());
+    }
     
     @Override
     public List<OrderItemDTO> getOrderItemsForCurrentUser() {
@@ -210,5 +222,16 @@ public class OrderServiceImpl implements OrderService {
                 .stream()
                 .map(orderItemMapper::orderItemToOrderItemDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void validateOrderOwnership(int orderId) {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        boolean isOwner = orderRepository.findAllOrdersByUserId(currentUser.getUserId())
+                .stream()
+                .anyMatch(order -> order.getOrderId() == orderId);
+                
+        if (!isOwner) {
+            throw new AccessDeniedException("You are not allowed to access this order");
+        }
     }
 }

@@ -22,42 +22,49 @@ public class OrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<OrderDTO> getAllOrders() {
         return orderService.getAllOrders();
     }
 
     @GetMapping("/{orderId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public OrderDTO getOrderById(@PathVariable int orderId) {
         return orderService.getOrderById(orderId);
     }
 
     @GetMapping("/order-items")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<OrderItemDTO> getAllOrderItems() {
         return orderService.getAllOrderItems();
     }
 
     @GetMapping("/{orderId}/order-items")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<OrderItemDTO> getOrderItemsInOrderByOrderId(@PathVariable int orderId) {
         return orderService.getAllOrderItemsByOrderId(orderId);
     }
 
-    @PostMapping("/checkout/{userId}/{cartId}")
-    public void checkout(@PathVariable int userId, @PathVariable int cartId) {
-        orderService.checkout(userId, cartId);
+    @PostMapping("/checkout")
+    @PreAuthorize("hasAuthority('USER')")
+    public void checkout() {
+        orderService.checkout();
     }
 
     @GetMapping("/my-orders")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAuthority('USER')")
     public List<OrderDTO> getMyOrders() {
         return orderService.getOrdersForCurrentUser();
     }
 
+    @GetMapping("/my-orders/{orderId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<OrderItemDTO> getOrderItemsInMyOrder(@PathVariable int orderId) {
+        return orderService.getOrderItemsInOrderByOrderIdForCurrentUser(orderId);
+    }
+
     @GetMapping("/my-orders/order-items")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAuthority('USER')")
     public List<OrderItemDTO> getMyOrderItems() {
         return orderService.getOrderItemsForCurrentUser();
     }
