@@ -17,5 +17,6 @@ public interface OrderService {
     List<OrderDTO> getOrdersForCurrentUser();
     List<OrderItemDTO> getOrderItemsInOrderByOrderIdForCurrentUser(int orderId);
     List<OrderItemDTO> getOrderItemsForCurrentUser();
+    void validateOrderOwnership(int orderId);
 
 }

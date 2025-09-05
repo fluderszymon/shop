@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -207,5 +208,25 @@ public class OrderServiceImplTests {
         when(jwtService.getCurrentUsername()).thenReturn("OtherUser");
         assertThrows(AccessDeniedException.class,
                 () -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(1));
+    }
+
+    @Test
+    void validateOrderOwnership_shouldAllowAccessWhenUserOwnsOrder() {
+        when(jwtService.getCurrentUsername()).thenReturn("User");
+        addOrderToDatabase();
+        
+        assertThatCode(() -> orderService.validateOrderOwnership(1))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void validateOrderOwnership_shouldThrowAccessDeniedExceptionWhenUserDoesNotOwnOrder() {
+        addOrderToDatabase();
+        
+        when(jwtService.getCurrentUsername()).thenReturn("OtherUser");
+        userService.addUser(new UserRegisterDTO("OtherUser", "other@outlook.com", "password", "Address"));
+        
+        assertThrows(AccessDeniedException.class,
+                () -> orderService.validateOrderOwnership(1));
     }
 }

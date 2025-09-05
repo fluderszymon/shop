@@ -8,6 +8,7 @@ import com.szymonfluder.shop.security.RateLimitService;
 import com.szymonfluder.shop.security.SecurityConfig;
 import com.szymonfluder.shop.security.UserDetailsServiceImpl;
 import com.szymonfluder.shop.service.InvoiceService;
+import com.szymonfluder.shop.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     private InvoiceService invoiceService;
 
     @MockitoBean
+    private OrderService orderService;
+
+    @MockitoBean
     private JWTService jwtService;
 
     @MockitoBean
@@ -50,7 +54,6 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     void setUp() {
         setupJwtMocksWithTokenExtraction(jwtService, userDetailsService);
         setupRateLimitMocks(rateLimitService);
-
     }
 
     private InvoiceDTO provideInvoiceDTO() {

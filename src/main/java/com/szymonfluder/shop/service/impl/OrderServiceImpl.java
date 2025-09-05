@@ -224,7 +224,8 @@ public class OrderServiceImpl implements OrderService {
                 .collect(Collectors.toList());
     }
 
-    private void validateOrderOwnership(int orderId) {
+    @Override
+    public void validateOrderOwnership(int orderId) {
         UserDTO currentUser = userService.getCurrentUserDTO();
         boolean isOwner = orderRepository.findAllOrdersByUserId(currentUser.getUserId())
                 .stream()
