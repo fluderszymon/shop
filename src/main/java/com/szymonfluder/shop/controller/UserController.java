@@ -23,31 +23,31 @@ public class UserController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<UserDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
     @GetMapping("/{username}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public UserDTO getUserByUsername(@PathVariable String username) {
         return userService.getUserByUsername(username);
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public User addUser(@RequestBody UserRegisterDTO userRegisterDTO) {
         return userService.addUser(userRegisterDTO);
     }
 
     @DeleteMapping("/{userId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteUserById(@PathVariable int userId) {
         userService.deleteUserById(userId);
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public User updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
@@ -55,7 +55,7 @@ public class UserController {
     @PostMapping("/register")
     public void register(@RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
         userService.register(userRegisterDTO);
-}
+    }
 
     @PostMapping("/login")
     public String login(@RequestBody UserLoginDTO userLoginDTO) {
