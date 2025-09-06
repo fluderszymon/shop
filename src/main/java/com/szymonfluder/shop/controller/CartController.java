@@ -20,8 +20,6 @@ public class CartController {
         this.cartService = cartService;
     }
 
-    // "/carts" endpoints for admin
-    
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartDTO> getAllCarts() {
@@ -87,8 +85,6 @@ public class CartController {
     public double getCartTotal(@PathVariable int cartId) {
         return cartService.getCartTotal(cartId);
     }
-
-    // "/my-cart" endpoints which verify that the user changes only his own cart
 
     @GetMapping("/my-cart")
     @PreAuthorize("hasAuthority('USER')")

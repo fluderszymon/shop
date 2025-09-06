@@ -22,7 +22,6 @@ public interface CartService {
 
     double getCartTotal(int cartId);
 
-    // methods for "/my-cart" endpoints
     CartDTO getCartDTOForCurrentUser();
     CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId);
     List<CartItemDTO> getCartItemsInCartForCurrentUser();

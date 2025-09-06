@@ -241,7 +241,7 @@ public class CartServiceImplTests {
         CartItemDTO cartItem2 = new CartItemDTO(0, 1, product2.getProductId(), 2);
         cartService.addCartItem(cartItem2);
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         double cartTotal = cartService.getCartTotalForCurrentUser();
         assertThat(cartTotal).isEqualTo(130.0);
     }
@@ -249,7 +249,7 @@ public class CartServiceImplTests {
     @Test
     void getCartDTOForCurrentUser_shouldReturnCartDTO() {
         addCartToDatabase();
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         CartDTO actualCart = cartService.getCartDTOForCurrentUser();
         CartDTO expectedCart = getCartMock();
 
@@ -261,18 +261,22 @@ public class CartServiceImplTests {
         userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
         cartService.deleteCartById(1);
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> cartService.getCartDTOForCurrentUser());
 
         assertThat(exception.getMessage()).isEqualTo("Cart not found for current user");
     }
 
+    private void mockCurrentUserAuth() {
+        when(jwtService.getCurrentUsername()).thenReturn("Username");
+    }
+
     @Test
     void getCartItemsInCartForCurrentUser_shouldReturnCartItems() {
         addCartItemToDatabase();
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         List<CartItemDTO> actualCartItems = cartService.getCartItemsInCartForCurrentUser();
         List<CartItemDTO> expectedCartItems = List.of(getCartItemDTOMock());
 
@@ -285,7 +289,7 @@ public class CartServiceImplTests {
         Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
         CartItemDTO cartItemDTO = new CartItemDTO(0, 1, product.getProductId(), 5);
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         CartItemDTO addedCartItemDTO = cartService.addCartItemToCartForCurrentUser(cartItemDTO);
         CartItemDTO expectedCartItemDTO = new CartItemDTO(1, 1, product.getProductId(), 5);
 
@@ -297,7 +301,7 @@ public class CartServiceImplTests {
         addCartItemToDatabase();
         CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         CartItemDTO updatedCartItemDTO = cartService.updateCartItemInCartForCurrentUser(cartItemDTOPassedToUpdateMethod);
 
         assertThat(updatedCartItemDTO).isEqualTo(cartItemDTOPassedToUpdateMethod);
@@ -309,7 +313,7 @@ public class CartServiceImplTests {
         int cartItemId = addedCartItemDTO.getCartItemId();
         assertThat(cartService.getCartItemById(cartItemId)).isNotNull();
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         cartService.deleteCartItemFromCartForCurrentUser(cartItemId);
 
         RuntimeException exception = assertThrows(RuntimeException.class,
@@ -322,7 +326,7 @@ public class CartServiceImplTests {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
         int cartItemId = addedCartItemDTO.getCartItemId();
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         CartItemDTO actualCartItemDTO = cartService.getCartItemDTOForCurrentUserByCartItemId(cartItemId);
         CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
 
@@ -348,7 +352,7 @@ public class CartServiceImplTests {
         Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
         CartItemDTO cartItemDTO = new CartItemDTO(0, 2, product.getProductId(), 5);
 
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockCurrentUserAuth();
         AccessDeniedException exception = assertThrows(AccessDeniedException.class,
                 () -> cartService.addCartItemToCartForCurrentUser(cartItemDTO));
 

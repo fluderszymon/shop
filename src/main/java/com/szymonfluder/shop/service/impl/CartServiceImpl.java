@@ -44,8 +44,6 @@ public class CartServiceImpl implements CartService {
         this.userService = userService;
     }
 
-    // methods for "/carts" endpoint
-
     @Override
     public List<CartDTO> getAllCarts() {
         return cartRepository.findAll()
@@ -145,8 +143,6 @@ public class CartServiceImpl implements CartService {
         return cartItemMapper.cartItemToCartItemDTO(updatedCartItem);
     }
 
-    // methods for "/my-cart" endpoint
-
     @Override
     public CartDTO getCartDTOForCurrentUser() {
         UserDTO currentUserDTO = userService.getCurrentUserDTO();
@@ -172,6 +168,7 @@ public class CartServiceImpl implements CartService {
         return addCartItem(cartItemDTO);
     }
 
+    @Transactional
     @Override
     public CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO) {
         validateCartItemOwnership(cartItemDTO);
