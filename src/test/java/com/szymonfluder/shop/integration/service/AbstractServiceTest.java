@@ -52,13 +52,9 @@ public abstract class AbstractServiceTest {
     protected final double SUFFICIENT_BALANCE = 100.00;
 
     protected final String PRODUCT_NAME = "Product";
-    protected final String UPDATED_PRODUCT_NAME = "Updated Product";
     protected final String PRODUCT_DESCRIPTION = "Description";
-    protected final String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
     protected final double PRODUCT_PRICE = 10.00;
-    protected final double UPDATED_PRODUCT_PRICE = 50.00;
     protected final int DEFAULT_STOCK = 100;
-    protected final int UPDATED_STOCK = 200;
     protected final int DEFAULT_QUANTITY = 10;
     protected final int UPDATED_QUANTITY = 99;
     protected final int SMALL_QUANTITY = 5;

@@ -22,6 +22,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Import({ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ProductServiceImplTests extends AbstractServiceTest {
+    private final String UPDATED_PRODUCT_NAME = "Updated Product";
+    private final String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
+    private final double UPDATED_PRODUCT_PRICE = 50.00;
+    private final int UPDATED_STOCK = 200;
 
     @Autowired
     private ProductMapperImpl productMapper;
