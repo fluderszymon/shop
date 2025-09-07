@@ -46,12 +46,7 @@ public abstract class AbstractServiceTest {
     protected final String ROLE = "USER";
 
     protected final String OTHER_USERNAME = "OtherUser";
-    protected final String UPDATED_USERNAME = "UpdatedUsername";
-    protected final String NON_EXISTING_USERNAME = "NonExistingUser";
     protected final String OTHER_EMAIL = "other@outlook.com";
-    protected final String UPDATED_EMAIL = "updated@outlook.com";
-    protected final String UPDATED_PASSWORD = "updatedPassword";
-    protected final String UPDATED_ADDRESS = "updatedAddress";
     protected final String ADMIN_ROLE = "ADMIN";
     protected final double INITIAL_BALANCE = 0.00;
     protected final double SUFFICIENT_BALANCE = 100.00;

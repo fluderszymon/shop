@@ -24,6 +24,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class UserServiceImplTests extends AbstractServiceTest {
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final String UPDATED_USERNAME = "UpdatedUsername";
+    private final String UPDATED_EMAIL = "updated@outlook.com";
+    private final String UPDATED_PASSWORD = "updatedPassword";
+    private final String UPDATED_ADDRESS = "updatedAddress";
+    private final String NON_EXISTING_USERNAME = "NonExistingUser";
 
     @Test
     void getAllUsers_shouldReturnEmptyList() {
