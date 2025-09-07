@@ -27,6 +27,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class CartServiceImplTests extends AbstractServiceTest {
 
+    private final int UPDATED_QUANTITY = 99;
+    private final int SMALL_QUANTITY = 5;
+    private final double CART_TOTAL = 100.0;
+
     @Test
     void getAllCarts_shouldReturnAllCartDTOs() {
         addCartToDatabase();

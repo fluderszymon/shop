@@ -56,10 +56,7 @@ public abstract class AbstractServiceTest {
     protected final double PRODUCT_PRICE = 10.00;
     protected final int DEFAULT_STOCK = 100;
     protected final int DEFAULT_QUANTITY = 10;
-    protected final int UPDATED_QUANTITY = 99;
-    protected final int SMALL_QUANTITY = 5;
 
-    protected final double CART_TOTAL = 100.0;
     protected final double ORDER_TOTAL = 100.0;
 
     @Autowired
