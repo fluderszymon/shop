@@ -29,6 +29,7 @@ public class UserServiceImplTests extends AbstractServiceTest {
     private final String UPDATED_PASSWORD = "updatedPassword";
     private final String UPDATED_ADDRESS = "updatedAddress";
     private final String NON_EXISTING_USERNAME = "NonExistingUser";
+    private final String ADMIN_ROLE = "ADMIN";
 
     @Test
     void getAllUsers_shouldReturnEmptyList() {
