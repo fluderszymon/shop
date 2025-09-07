@@ -1,15 +1,17 @@
 package com.szymonfluder.shop.integration.service;
 
-import com.szymonfluder.shop.dto.*;
-import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.dto.CartDTO;
+import com.szymonfluder.shop.dto.CartItemDTO;
+import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.integration.config.TestConfig;
-import com.szymonfluder.shop.mapper.*;
-import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.mapper.CartItemMapperImpl;
+import com.szymonfluder.shop.mapper.CartMapperImpl;
+import com.szymonfluder.shop.mapper.ProductMapperImpl;
+import com.szymonfluder.shop.mapper.UserMapperImpl;
 import com.szymonfluder.shop.service.impl.CartServiceImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
 import com.szymonfluder.shop.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
@@ -17,49 +19,25 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-import org.springframework.security.access.AccessDeniedException;
 
 @DataJpaTest
 @Import({CartServiceImpl.class, CartMapperImpl.class,
         CartItemMapperImpl.class, ProductServiceImpl.class, ProductMapperImpl.class,
         UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class CartServiceImplTests {
-
-    @Autowired
-    private CartServiceImpl cartService;
-
-    @Autowired
-    private ProductServiceImpl productService;
-
-    @Autowired
-    private UserServiceImpl userService;
-
-    @Autowired
-    private JWTService jwtService;
-
-    private CartDTO addCartToDatabase() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        return cartService.getCartById(1);
-    }
-
-    private CartDTO getCartMock() {
-        return new CartDTO(1, 1);
-    }
+public class CartServiceImplTests extends AbstractServiceTest {
 
     @Test
     void getAllCarts_shouldReturnAllCartDTOs() {
         addCartToDatabase();
         List<CartDTO> actualProductDTOList = cartService.getAllCarts();
-        List<CartDTO> expectedProductDTOList = List.of(getCartMock());
+        List<CartDTO> expectedProductDTOList = List.of(getCartDTOMock());
 
         assertThat(actualProductDTOList).isEqualTo(expectedProductDTOList);
     }
 
     @Test
-    void getAllCarts_shouldReturnReturnEmptyList() {
+    void getAllCarts_shouldReturnEmptyList() {
         List<CartDTO> actualProductDTOList = cartService.getAllCarts();
         assertThat(actualProductDTOList.isEmpty()).isTrue();
     }
@@ -67,27 +45,22 @@ public class CartServiceImplTests {
     @Test
     void getCartById_shouldReturnCartDTO() {
         addCartToDatabase();
-        CartDTO actualCart = cartService.getCartById(1);
-        CartDTO expectedCart = getCartMock();
+        CartDTO actualCart = cartService.getCartById(CART_ID);
+        CartDTO expectedCart = getCartDTOMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
     }
 
     @Test
     void getCartById_shouldThrowExceptionWhenCartNotFound() {
-        int cartId = 1;
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartById(cartId));
-
-        assertThat(exception.getMessage()).isEqualTo("Cart not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartById(CART_ID), "Cart not found");
     }
 
     @Test
     void addCart_shouldAddCart() {
         addCartToDatabase();
-        CartDTO actualCart = cartService.getCartById(1);
-        CartDTO expectedCart = getCartMock();
+        CartDTO actualCart = cartService.getCartById(CART_ID);
+        CartDTO expectedCart = getCartDTOMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
     }
@@ -100,17 +73,13 @@ public class CartServiceImplTests {
 
         cartService.deleteCartById(cartId);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartById(cartId));
-        assertThat(exception.getMessage()).isEqualTo("Cart not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartById(cartId), "Cart not found");
     }
 
     @Test
     void updateCart_shouldUpdateCart() {
-        CartDTO addedCartDTO = addCartToDatabase();
-        int cartId = addedCartDTO.getCartId();
-
-        CartDTO cartDTOPassedToUpdateMethod = new CartDTO(cartId, 2);
+        addCartToDatabase();
+        CartDTO cartDTOPassedToUpdateMethod = new CartDTO(CART_ID, (USER_ID + 1));
 
         CartDTO updatedCartDTO = cartService.updateCart(cartDTOPassedToUpdateMethod);
 
@@ -120,20 +89,8 @@ public class CartServiceImplTests {
     @Test
     void getCartTotal_shouldReturnCartTotal() {
         addCartItemToDatabase();
-        int cartId = 1;
-
-        double cartTotal = cartService.getCartTotal(cartId);
-        assertThat(cartTotal).isEqualTo(100.0);
-    }
-
-    private CartItemDTO addCartItemToDatabase() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
-        return cartService.addCartItem(new CartItemDTO(0, 1, product.getProductId(), 10));
-    }
-
-    private CartItemDTO getCartItemDTOMock() {
-        return new CartItemDTO(1, 1, 1, 10);
+        double cartTotal = cartService.getCartTotal(CART_ID);
+        assertThat(cartTotal).isEqualTo(CART_TOTAL);
     }
 
     @Test
@@ -164,8 +121,7 @@ public class CartServiceImplTests {
     @Test
     void getAllCartItemsByCartId_shouldReturnEmptyListWhenCartHasNoItems() {
         addCartItemToDatabase();
-        int emptyCartId = 99;
-        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItemsByCartId(emptyCartId);
+        List<CartItemDTO> actualCartItemDTOList = cartService.getAllCartItemsByCartId(NON_EXISTING_ID);
 
         assertThat(actualCartItemDTOList.isEmpty()).isTrue();
     }
@@ -173,7 +129,7 @@ public class CartServiceImplTests {
     @Test
     void getCartItemById_shouldReturnCartItemDTO() {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
-        int cartItemId = addedCartItemDTO.getCartId();
+        int cartItemId = addedCartItemDTO.getCartItemId();
         CartItemDTO actualCartItemDTO = cartService.getCartItemById(cartItemId);
         CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
 
@@ -182,12 +138,7 @@ public class CartServiceImplTests {
 
     @Test
     void getCartItemById_shouldThrowExceptionWhenCartItemNotFound() {
-        int nonExistingCartItemId = 1;
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartItemById(nonExistingCartItemId));
-
-        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartItemById(NON_EXISTING_ID), "CartItem not found");
     }
 
     @Test
@@ -201,20 +152,18 @@ public class CartServiceImplTests {
     @Test
     void deleteCartItemById_shouldDeleteCartItem() {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
-        int cartItemId = addedCartItemDTO.getCartId();
+        int cartItemId = addedCartItemDTO.getCartItemId();
         assertThat(cartService.getCartItemById(cartItemId)).isNotNull();
 
         cartService.deleteCartItemById(cartItemId);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartItemById(cartItemId));
-        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartItemById(cartItemId), "CartItem not found");
     }
 
     @Test
     void updateCartItem_shouldUpdateCartItem() {
         addCartItemToDatabase();
-        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
+        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(CART_ITEM_ID, CART_ID, PRODUCT_ID, UPDATED_QUANTITY);
 
         CartItemDTO updatedCartItemDTO = cartService.updateCartItem(cartItemDTOPassedToUpdateMethod);
 
@@ -223,60 +172,47 @@ public class CartServiceImplTests {
 
     @Test
     void addCartItem_shouldThrowExceptionWhenInsufficientStock() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 5));
+        addUserToDatabase();
+        addProductToDatabase();
         
-        CartItemDTO cartItemDTO = new CartItemDTO(0, 1, product.getProductId(), 10);
+        CartItemDTO cartItemDTO = new CartItemDTO(0, CART_ID, PRODUCT_ID, DEFAULT_STOCK+1);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.addCartItem(cartItemDTO));
-
-        assertThat(exception.getMessage()).isEqualTo("Not enough products in stock");
+        assertRuntimeExceptionWithMessage(() -> cartService.addCartItem(cartItemDTO), "Not enough products in stock");
     }
 
     @Test
     void getCartTotalForCurrentUser_shouldReturnCartTotal() {
         addCartItemToDatabase();
-        Product product2 = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 15.00, 100));
-        CartItemDTO cartItem2 = new CartItemDTO(0, 1, product2.getProductId(), 2);
-        cartService.addCartItem(cartItem2);
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         double cartTotal = cartService.getCartTotalForCurrentUser();
-        assertThat(cartTotal).isEqualTo(130.0);
+        assertThat(cartTotal).isEqualTo(CART_TOTAL);
     }
 
     @Test
     void getCartDTOForCurrentUser_shouldReturnCartDTO() {
         addCartToDatabase();
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         CartDTO actualCart = cartService.getCartDTOForCurrentUser();
-        CartDTO expectedCart = getCartMock();
+        CartDTO expectedCart = getCartDTOMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
     }
 
     @Test
     void getCartDTOForCurrentUser_shouldThrowExceptionWhenCartNotFound() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        cartService.deleteCartById(1);
+        addUserToDatabase();
+        cartService.deleteCartById(CART_ID);
 
-        mockCurrentUserAuth();
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartDTOForCurrentUser());
-
-        assertThat(exception.getMessage()).isEqualTo("Cart not found for current user");
-    }
-
-    private void mockCurrentUserAuth() {
-        when(jwtService.getCurrentUsername()).thenReturn("Username");
+        mockJwtService_getCurrentUsername();
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartDTOForCurrentUser(), "Cart not found for current user");
     }
 
     @Test
     void getCartItemsInCartForCurrentUser_shouldReturnCartItems() {
         addCartItemToDatabase();
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         List<CartItemDTO> actualCartItems = cartService.getCartItemsInCartForCurrentUser();
         List<CartItemDTO> expectedCartItems = List.of(getCartItemDTOMock());
 
@@ -285,13 +221,13 @@ public class CartServiceImplTests {
 
     @Test
     void addCartItemToCartForCurrentUser_shouldAddCartItem() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
-        CartItemDTO cartItemDTO = new CartItemDTO(0, 1, product.getProductId(), 5);
+        addUserToDatabase();
+        addProductToDatabase();
+        CartItemDTO cartItemDTO = new CartItemDTO(0, CART_ID, PRODUCT_ID, SMALL_QUANTITY);
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         CartItemDTO addedCartItemDTO = cartService.addCartItemToCartForCurrentUser(cartItemDTO);
-        CartItemDTO expectedCartItemDTO = new CartItemDTO(1, 1, product.getProductId(), 5);
+        CartItemDTO expectedCartItemDTO = new CartItemDTO(CART_ITEM_ID, CART_ID, PRODUCT_ID, SMALL_QUANTITY);
 
         assertThat(addedCartItemDTO).isEqualTo(expectedCartItemDTO);
     }
@@ -299,9 +235,9 @@ public class CartServiceImplTests {
     @Test
     void updateCartItemInCartForCurrentUser_shouldUpdateCartItem() {
         addCartItemToDatabase();
-        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(1, 1, 1, 99);
+        CartItemDTO cartItemDTOPassedToUpdateMethod = new CartItemDTO(CART_ITEM_ID, CART_ID, PRODUCT_ID, UPDATED_QUANTITY);
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         CartItemDTO updatedCartItemDTO = cartService.updateCartItemInCartForCurrentUser(cartItemDTOPassedToUpdateMethod);
 
         assertThat(updatedCartItemDTO).isEqualTo(cartItemDTOPassedToUpdateMethod);
@@ -313,12 +249,10 @@ public class CartServiceImplTests {
         int cartItemId = addedCartItemDTO.getCartItemId();
         assertThat(cartService.getCartItemById(cartItemId)).isNotNull();
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         cartService.deleteCartItemFromCartForCurrentUser(cartItemId);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartItemById(cartItemId));
-        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartItemById(cartItemId), "CartItem not found");
     }
 
     @Test
@@ -326,7 +260,7 @@ public class CartServiceImplTests {
         CartItemDTO addedCartItemDTO = addCartItemToDatabase();
         int cartItemId = addedCartItemDTO.getCartItemId();
 
-        mockCurrentUserAuth();
+        mockJwtService_getCurrentUsername();
         CartItemDTO actualCartItemDTO = cartService.getCartItemDTOForCurrentUserByCartItemId(cartItemId);
         CartItemDTO expectedCartItemDTO = getCartItemDTOMock();
 
@@ -336,26 +270,20 @@ public class CartServiceImplTests {
     @Test
     void getCartItemDTOForCurrentUserByCartItemId_shouldThrowExceptionWhenCartItemNotFound() {
         addCartToDatabase();
-        int nonExistingCartItemId = 99;
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> cartService.getCartItemDTOForCurrentUserByCartItemId(nonExistingCartItemId));
-
-        assertThat(exception.getMessage()).isEqualTo("CartItem not found");
+        assertRuntimeExceptionWithMessage(() -> cartService.getCartItemDTOForCurrentUserByCartItemId(NON_EXISTING_ID), "CartItem not found");
     }
 
     @Test
     void addCartItemToCartForCurrentUser_shouldThrowExceptionWhenAccessDenied() {
-        userService.addUser(new UserRegisterDTO("Username", "user@outlook.com", "password", "Address"));
-        userService.addUser(new UserRegisterDTO("OtherUser", "otheruser@outlook.com", "password", "Address"));
+        userService.addUser(new UserRegisterDTO(USERNAME, EMAIL, PASSWORD, ADDRESS));
+        userService.addUser(new UserRegisterDTO(OTHER_USERNAME, OTHER_EMAIL, PASSWORD, ADDRESS));
 
-        Product product = productService.addProduct(new ProductCreateDTO("Product", "Product Description", 10.00, 100));
-        CartItemDTO cartItemDTO = new CartItemDTO(0, 2, product.getProductId(), 5);
+        addProductToDatabase();
+        CartItemDTO cartItemDTO = new CartItemDTO(0, (USER_ID + 1), PRODUCT_ID, SMALL_QUANTITY);
 
-        mockCurrentUserAuth();
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-                () -> cartService.addCartItemToCartForCurrentUser(cartItemDTO));
-
-        assertThat(exception.getMessage()).isEqualTo("You are not allowed to access this cart item");
+        mockJwtService_getCurrentUsername();
+        assertAccessDeniedException(() -> cartService.addCartItemToCartForCurrentUser(cartItemDTO), 
+                "You are not allowed to access this cart item");
     }   
 }
