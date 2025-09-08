@@ -32,24 +32,6 @@ public class CartController {
         return cartService.getCartById(cartId);
     }
 
-    @PostMapping("/{userId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public CartDTO addCart(@PathVariable int userId) {
-        return cartService.addCart(userId);
-    }
-
-    @DeleteMapping("/{cartId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void deleteCartById(@PathVariable int cartId) {
-        cartService.deleteCartById(cartId);
-    }
-
-    @PutMapping
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public CartDTO updateCart(@RequestBody CartDTO cartDTO) {
-        return cartService.updateCart(cartDTO);
-    }
-
     @GetMapping("/{cartId}/items")
     @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartItemDTO> getCartItemsInCartByCartId(@PathVariable int cartId) {
@@ -60,30 +42,6 @@ public class CartController {
     @PreAuthorize("hasAuthority('ADMIN')")
     public CartItemDTO getCartItemById(@PathVariable int cartItemId) {
         return cartService.getCartItemById(cartItemId);
-    }
-
-    @PostMapping("/{cartId}/items")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public CartItemDTO addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartService.addCartItem(cartItemDTO);
-    }
-
-    @PutMapping("/{cartId}/items/{cartItemId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int cartItemId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartService.updateCartItem(cartItemDTO);
-    }
-
-    @DeleteMapping("/{cartId}/items/{cartItemId}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public void deleteCartItem(@PathVariable int cartId, @PathVariable int cartItemId) {
-        cartService.deleteCartItemById(cartItemId);
-    }
-
-    @GetMapping("/{cartId}/total")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public double getCartTotal(@PathVariable int cartId) {
-        return cartService.getCartTotal(cartId);
     }
 
     @GetMapping("/my-cart")
