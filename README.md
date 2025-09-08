@@ -94,38 +94,60 @@ POST /users/register     # User registration
 POST /users/login        # User login
 ```
 
-**User Management**
+**User Management (Admin only)**
 ```
 GET    /users                    # List all users
 GET    /users/{username}         # Get user by username
+POST   /users                    # Create user
 PUT    /users                    # Update user
 DELETE /users/{userId}           # Delete user
 ```
 
 **Product Management**
 ```
-GET    /products                 # List all products
-GET    /products/{productId}     # Get product by ID
-POST   /products                 # Create product
-PUT    /products                 # Update product
-DELETE /products/{productId}     # Delete product
+GET    /products                 # List all products (USER)
+GET    /products/{productId}     # Get product by ID (USER)
+POST   /products                 # Create product (ADMIN)
+PUT    /products                 # Update product (ADMIN)
+DELETE /products/{productId}     # Delete product (ADMIN)
 ```
 
-**Shopping Cart**
+**Shopping Cart (Admin)**
 ```
 GET    /carts                    # List all carts
 GET    /carts/{cartId}           # Get cart by ID
-POST   /carts/{userId}           # Create cart for user
 GET    /carts/{cartId}/items     # Get cart items
-POST   /carts/{cartId}/items     # Add item to cart
-DELETE /carts/{cartId}           # Delete cart
+GET    /carts/items/{cartItemId} # Get cart item by ID
 ```
 
-**Orders & Invoices**
+**Shopping Cart (User)**
 ```
-GET    /orders                            # List all orders
-GET    /orders/{orderId}                  # Get order by ID
-POST   /orders/checkout/{userId}/{cartId} # Process checkout
-GET    /orders/{orderId}/order-items      # Get order items
-GET    /invoices/{orderId}/pdf            # Generate invoice PDF
+GET    /carts/my-cart                    # Get my cart
+GET    /carts/my-cart/items              # Get my cart items
+GET    /carts/my-cart/items/{cartItemId} # Get my cart item by ID
+POST   /carts/my-cart/items              # Add item to my cart
+PUT    /carts/my-cart/items              # Update item in my cart
+DELETE /carts/my-cart/items/{cartItemId} # Remove item from my cart
+GET    /carts/my-cart/total              # Get my cart total
+```
+
+**Orders (Admin)**
+```
+GET    /orders                        # List all orders
+GET    /orders/{orderId}              # Get order by ID
+GET    /orders/order-items            # List all order items
+GET    /orders/{orderId}/order-items  # Get order items by order ID
+```
+
+**Orders (User)**
+```
+POST   /orders/checkout                # Process checkout
+GET    /orders/my-orders               # Get my orders
+GET    /orders/my-orders/{orderId}     # Get my order items by order ID
+GET    /orders/my-orders/order-items   # Get all my order items
+```
+
+**Invoices (User)**
+```
+GET    /invoices/{orderId}/pdf    # Generate invoice PDF
 ```
