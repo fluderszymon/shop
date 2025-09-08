@@ -22,13 +22,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @Import({ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class ProductServiceImplTests extends AbstractServiceTest {
-    private final String UPDATED_PRODUCT_NAME = "Updated Product";
-    private final String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
-    private final double UPDATED_PRODUCT_PRICE = 50.00;
-    private final int UPDATED_STOCK = 200;
 
     @Autowired
     private ProductMapperImpl productMapper;
+
+    private Product getProductMock() {
+        return new Product(PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
+    }
+
+    private ProductDTO getProductDTOMock() {
+        return new ProductDTO(PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
+    }
 
     @Test
     void getAllProducts_shouldReturnEmptyList() {
@@ -108,7 +112,11 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     @Test
     void updateProduct_shouldReturnUpdatedProduct() {
         addProductToDatabase();
-        Product productPassedToUpdateMethod 
+        String UPDATED_PRODUCT_NAME = "Updated Product";
+        String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
+        double UPDATED_PRODUCT_PRICE = 50.00;
+        int UPDATED_STOCK = 200;
+        Product productPassedToUpdateMethod
             = new Product(PRODUCT_ID, UPDATED_PRODUCT_NAME, UPDATED_PRODUCT_DESCRIPTION, UPDATED_PRODUCT_PRICE, UPDATED_STOCK);
 
         Product updatedProduct = productService.updateProduct(productPassedToUpdateMethod);

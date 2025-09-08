@@ -1,6 +1,7 @@
 package com.szymonfluder.shop.integration.service;
 
 import com.szymonfluder.shop.dto.InvoiceDTO;
+import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.CartItemMapperImpl;
 import com.szymonfluder.shop.mapper.CartMapperImpl;
@@ -21,6 +22,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -31,6 +34,11 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
         CartMapperImpl.class, CartItemMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class InvoiceServiceImplTests extends AbstractServiceTest {
+
+    private InvoiceDTO getInvoiceDTOMock() {
+        OrderItemDTO orderItemDTO = getOrderItemDTOMock();
+        return new InvoiceDTO(("INV_" + ORDER_ID), LocalDate.now(), List.of(orderItemDTO), ORDER_TOTAL, USERNAME, ADDRESS);
+    }
 
     @Test
     void createInvoiceDTO_shouldCreateInvoiceDTO() {

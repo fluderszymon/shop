@@ -31,6 +31,15 @@ public class CartServiceImplTests extends AbstractServiceTest {
     private final int SMALL_QUANTITY = 5;
     private final double CART_TOTAL = 100.0;
 
+    private CartDTO addCartToDatabase() {
+        userService.addUser(getUserRegisterDTO());
+        return cartService.getCartById(CART_ID);
+    }
+
+    private CartDTO getCartDTOMock() {
+        return new CartDTO(CART_ID, USER_ID);
+    }
+
     @Test
     void getAllCarts_shouldReturnAllCartDTOs() {
         addCartToDatabase();

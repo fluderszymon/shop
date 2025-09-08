@@ -4,7 +4,7 @@ import com.szymonfluder.shop.dto.OrderDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
-import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.CartItemMapperImpl;
 import com.szymonfluder.shop.mapper.CartMapperImpl;
@@ -21,10 +21,12 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
@@ -33,6 +35,43 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
         ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class OrderServiceImplTests extends AbstractServiceTest {
+
+    private OrderDTO getOrderDTOMock() {
+        return new OrderDTO(ORDER_ID, USER_ID, ORDER_TOTAL, LocalDate.now());
+    }
+
+    private void setupCompleteCartScenario() {
+        addCartItemToDatabase();
+        userService.updateUserBalance(USER_ID, SUFFICIENT_BALANCE);
+        mockJwtService_getCurrentUsername();
+    }
+
+    private void setupCartWithNotEnoughStockInProducts() {
+        setupCompleteCartScenario();
+        ProductDTO productDTO = productService.getProductById(PRODUCT_ID);
+        productDTO.setStock(0);
+        productService.updateProduct(productMapper.productDTOToProduct(productDTO));
+    }
+
+    private void addUserToDatabaseWithSufficientBalance() {
+        User addedUser = userService.addUser(getUserRegisterDTO());
+        userService.updateUserBalance(addedUser.getUserId(), SUFFICIENT_BALANCE);
+        userService.getUserById(addedUser.getUserId());
+    }
+
+    private void setupEmptyCartScenario() {
+        addUserToDatabaseWithSufficientBalance();
+        mockJwtService_getCurrentUsername();
+    }
+
+    private void setupInsufficientBalanceScenario() {
+        addCartItemToDatabase();
+        mockJwtService_getCurrentUsername();
+    }
+
+    private void mockJwtService_getCurrentUsername_withWrongUsername() {
+        when(jwtService.getCurrentUsername()).thenReturn(OTHER_USERNAME);
+    }
 
     @Test
     void checkout_shouldCompleteCheckout() {

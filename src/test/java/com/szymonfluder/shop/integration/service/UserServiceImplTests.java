@@ -23,13 +23,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 public class UserServiceImplTests extends AbstractServiceTest {
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
-    private final String UPDATED_USERNAME = "UpdatedUsername";
-    private final String UPDATED_EMAIL = "updated@outlook.com";
-    private final String UPDATED_PASSWORD = "updatedPassword";
-    private final String UPDATED_ADDRESS = "updatedAddress";
+    private final String ROLE = "USER";
     private final String NON_EXISTING_USERNAME = "NonExistingUser";
-    private final String ADMIN_ROLE = "ADMIN";
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+
+    private UserDTO getUserDTOMock() {
+        double INITIAL_BALANCE = 0.00;
+        return new UserDTO(USER_ID, USERNAME, EMAIL, ROLE, USER_ID, ADDRESS, INITIAL_BALANCE);
+    }
 
     @Test
     void getAllUsers_shouldReturnEmptyList() {
@@ -94,6 +95,11 @@ public class UserServiceImplTests extends AbstractServiceTest {
     @Test
     void updateUser_shouldReturnUpdatedUser() {
         addUserToDatabase();
+        String ADMIN_ROLE = "ADMIN";
+        String UPDATED_ADDRESS = "updatedAddress";
+        String UPDATED_USERNAME = "UpdatedUsername";
+        String UPDATED_EMAIL = "updated@outlook.com";
+        String UPDATED_PASSWORD = "updatedPassword";
         User userPassedToUpdateMethod = new User(USER_ID, UPDATED_USERNAME, UPDATED_EMAIL,
                 UPDATED_PASSWORD, ADMIN_ROLE, null, UPDATED_ADDRESS, SUFFICIENT_BALANCE);
         User updatedUser = userService.updateUser(userPassedToUpdateMethod);
