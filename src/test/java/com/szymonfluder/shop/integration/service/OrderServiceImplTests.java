@@ -26,7 +26,6 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
-import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
@@ -43,7 +42,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     private void setupCompleteCartScenario() {
         addCartItemToDatabase();
         userService.updateUserBalance(USER_ID, SUFFICIENT_BALANCE);
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
     }
 
     private void setupCartWithNotEnoughStockInProducts() {
@@ -61,16 +60,12 @@ public class OrderServiceImplTests extends AbstractServiceTest {
 
     private void setupEmptyCartScenario() {
         addUserToDatabaseWithSufficientBalance();
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
     }
 
     private void setupInsufficientBalanceScenario() {
         addCartItemToDatabase();
-        mockJwtService_getCurrentUsername();
-    }
-
-    private void mockJwtService_getCurrentUsername_withWrongUsername() {
-        when(jwtService.getCurrentUsername()).thenReturn(OTHER_USERNAME);
+        authenticateUser(USERNAME);
     }
 
     @Test
@@ -143,7 +138,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
 
     @Test
     void getOrdersForCurrentUser_shouldGetAllOrderDTOsForCurrentUser() {
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
         addOrderToDatabase();
         List<OrderDTO> actualOrderDTOList = orderService.getOrdersForCurrentUser();
         List<OrderDTO> expectedOrderDTOList = List.of(getOrderDTOMock());
@@ -153,7 +148,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
 
     @Test
     void getOrderItemsForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsForCurrentUser();
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
@@ -164,7 +159,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     @Test
     void getOrderItemsInOrderByOrderIdForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
         addOrderToDatabase();
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsInOrderByOrderIdForCurrentUser(ORDER_ID);
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
 
@@ -176,7 +171,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
         addOrderToDatabase();
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, EMAIL, PASSWORD, ADDRESS));
         
-        mockJwtService_getCurrentUsername_withWrongUsername();
+        authenticateUser(OTHER_USERNAME);
         assertAccessDeniedException(() -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(USER_ID), 
                 "You are not allowed to access this order");
     }
@@ -184,7 +179,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     @Test
     void validateOrderOwnership_shouldAllowAccessWhenUserOwnsOrder() {
         addOrderToDatabase();
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
         assertThatCode(() -> orderService.validateOrderOwnership(ORDER_ID))
                 .doesNotThrowAnyException();
     }
@@ -193,9 +188,9 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     void validateOrderOwnership_shouldThrowAccessDeniedExceptionWhenUserDoesNotOwnOrder() {
         addOrderToDatabase();
         
-        mockJwtService_getCurrentUsername_withWrongUsername();
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, OTHER_EMAIL, PASSWORD, ADDRESS));
-        
+        authenticateUser(OTHER_USERNAME);
+
         assertAccessDeniedException(() -> orderService.validateOrderOwnership(USER_ID), 
                 "You are not allowed to access this order");
     }

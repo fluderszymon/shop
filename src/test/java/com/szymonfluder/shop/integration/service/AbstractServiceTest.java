@@ -12,11 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import java.util.List;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import org.junit.jupiter.api.function.Executable;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 @DataJpaTest
 @Import({UserServiceImpl.class, UserMapperImpl.class,
@@ -73,8 +78,13 @@ public abstract class AbstractServiceTest {
     @Autowired
     protected ProductMapperImpl productMapper;
 
-    protected void mockJwtService_getCurrentUsername() {
-        when(jwtService.getCurrentUsername()).thenReturn(USERNAME);
+    protected void authenticateUser(String username) {
+        UserDTO userDTO = userService.getUserByUsername(username);
+        if (userDTO != null) {
+            SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(
+                    username, null, List.of(new SimpleGrantedAuthority(userDTO.getRole()))));
+        }
     }
 
     protected Product addProductToDatabase() {
@@ -105,7 +115,7 @@ public abstract class AbstractServiceTest {
     protected void addOrderToDatabase() {
         addCartItemToDatabase();
         userService.updateUserBalance(USER_ID, SUFFICIENT_BALANCE);
-        mockJwtService_getCurrentUsername();
+        authenticateUser(USERNAME);
         orderService.checkout();
     }
 
