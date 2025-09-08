@@ -5,6 +5,7 @@ import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -20,57 +21,68 @@ public class CartController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartDTO> getAllCarts() {
         return cartService.getAllCarts();
     }
 
     @GetMapping("/{cartId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CartDTO getCartById(@PathVariable int cartId) {
         return cartService.getCartById(cartId);
     }
 
-    @PostMapping("/{userId}")
-    public CartDTO addCart(@PathVariable int userId) {
-        return cartService.addCart(userId);
-    }
-
-    @DeleteMapping("/{cartId}")
-    public void deleteCartById(@PathVariable int cartId) {
-        cartService.deleteCartById(cartId);
-    }
-
-    @PutMapping
-    public CartDTO updateCart(@RequestBody CartDTO cartDTO) {
-        return cartService.updateCart(cartDTO);
-    }
-
     @GetMapping("/{cartId}/items")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public List<CartItemDTO> getCartItemsInCartByCartId(@PathVariable int cartId) {
         return cartService.getAllCartItemsByCartId(cartId);
     }
 
     @GetMapping("/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public CartItemDTO getCartItemById(@PathVariable int cartItemId) {
         return cartService.getCartItemById(cartItemId);
     }
 
-    @PostMapping("/{cartId}/items")
-    public CartItemDTO addCartItem(@PathVariable int cartId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartService.addCartItem(cartItemDTO);
+    @GetMapping("/my-cart")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartDTO getMyCart() {
+        return cartService.getCartDTOForCurrentUser();
     }
 
-    @PutMapping("/{cartId}/items/{itemId}")
-    public CartItemDTO updateCartItem(@PathVariable int cartId, @PathVariable int itemId, @RequestBody CartItemDTO cartItemDTO) {
-        return cartService.updateCartItem(cartItemDTO);
+    @GetMapping("/my-cart/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO getCartItemByCartItemId(@PathVariable int cartItemId) {
+        return cartService.getCartItemDTOForCurrentUserByCartItemId(cartItemId);
     }
 
-    @DeleteMapping("/{cartId}/items/{cartItemId}")
-    public void deleteCartItem(@PathVariable int cartId, @PathVariable int cartItemId) {
-        cartService.deleteCartItemById(cartItemId);
+    @GetMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public List<CartItemDTO> getMyCartItems() {
+        return cartService.getCartItemsInCartForCurrentUser();
     }
 
-    @GetMapping("/{cartId}/total")
-    public double getCartTotal(@PathVariable int cartId) {
-        return cartService.getCartTotal(cartId);
+    @PostMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO addCartItemToMyCart(@RequestBody CartItemDTO cartItemDTO) {
+        return cartService.addCartItemToCartForCurrentUser(cartItemDTO);
+    }
+
+    @PutMapping("/my-cart/items")
+    @PreAuthorize("hasAuthority('USER')")
+    public CartItemDTO updateCartItemInMyCart(@RequestBody CartItemDTO cartItemDTO) {
+        return cartService.updateCartItemInCartForCurrentUser(cartItemDTO);
+    }
+
+    @DeleteMapping("/my-cart/items/{cartItemId}")
+    @PreAuthorize("hasAuthority('USER')")
+    public void deleteCartItemFromMyCart(@PathVariable int cartItemId) {
+        cartService.deleteCartItemFromCartForCurrentUser(cartItemId);
+    }
+
+    @GetMapping("/my-cart/total")
+    @PreAuthorize("hasAuthority('USER')")
+    public double getMyCartTotal() {
+        return cartService.getCartTotalForCurrentUser();
     }
 }

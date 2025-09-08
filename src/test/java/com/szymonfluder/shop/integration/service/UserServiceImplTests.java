@@ -1,41 +1,35 @@
 package com.szymonfluder.shop.integration.service;
 
+import com.szymonfluder.shop.dto.UserDTO;
+import com.szymonfluder.shop.dto.UserLoginDTO;
+import com.szymonfluder.shop.dto.UserRegisterDTO;
+import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.exception.UsernameTakenException;
 import com.szymonfluder.shop.integration.config.TestConfig;
+import com.szymonfluder.shop.mapper.UserMapperImpl;
+import com.szymonfluder.shop.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import com.szymonfluder.shop.dto.UserDTO;
-import com.szymonfluder.shop.dto.UserRegisterDTO;
-import com.szymonfluder.shop.entity.User;
-import com.szymonfluder.shop.mapper.UserMapperImpl;
-import com.szymonfluder.shop.service.impl.UserServiceImpl;
 import org.springframework.test.annotation.DirtiesContext;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @Import({UserServiceImpl.class, UserMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class UserServiceImplTests {
+public class UserServiceImplTests extends AbstractServiceTest {
 
-    @Autowired
-    private UserServiceImpl userService;
-
+    private final String ROLE = "USER";
+    private final String NON_EXISTING_USERNAME = "NonExistingUser";
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
-    private User addUserToDatabase() {
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO(
-            "User", "user@outlook.com", "password", "Address");
-        return userService.addUser(userRegisterDTO);
-    }
-
     private UserDTO getUserDTOMock() {
-        return new UserDTO(1, "User", "user@outlook.com", "USER", -1, "Address", 0.00);
+        double INITIAL_BALANCE = 0.00;
+        return new UserDTO(USER_ID, USERNAME, EMAIL, ROLE, USER_ID, ADDRESS, INITIAL_BALANCE);
     }
 
     @Test
@@ -48,9 +42,9 @@ public class UserServiceImplTests {
     void getAllUsers_shouldReturnAllUserDTOs() {
         addUserToDatabase();
         List<UserDTO> actualUserDTOList = userService.getAllUsers();
-        UserDTO expectedUserDTO = getUserDTOMock();
+        List<UserDTO> expectedUserDTOList = List.of(getUserDTOMock());
 
-        assertThat(actualUserDTOList.contains(expectedUserDTO)).isTrue();
+        assertThat(actualUserDTOList).isEqualTo(expectedUserDTOList);
     }
 
     @Test
@@ -63,19 +57,15 @@ public class UserServiceImplTests {
     }
 
     @Test
-    void getUserByUsername_shouldReturnNullUserDTOWhenUserNotFound() {
-        addUserToDatabase();
-        String username = "nonExistingUsername";
-
-        UserDTO actualUserDTO = userService.getUserByUsername(username);
-
+    void getUserByUsername_shouldReturnNullWhenUserNotFound() {
+        UserDTO actualUserDTO = userService.getUserByUsername(NON_EXISTING_USERNAME);
         assertThat(actualUserDTO).isNull();
     }
 
     @Test
     void getUserById_shouldReturnUserDTO() {
-        User addedUser = addUserToDatabase();
-        UserDTO actualUserDTO = userService.getUserById(addedUser.getUserId());
+        addUserToDatabase();
+        UserDTO actualUserDTO = userService.getUserById(USER_ID);
         UserDTO expectedUserDTO = getUserDTOMock();
 
         assertThat(actualUserDTO).isEqualTo(expectedUserDTO);
@@ -83,8 +73,7 @@ public class UserServiceImplTests {
 
     @Test
     void getUserById_shouldThrowExceptionWhenUserWithGivenIdIsNotPresent() {
-        int userId = 1;
-        UserDTO actualUserDTO = userService.getUserById(userId);
+        UserDTO actualUserDTO = userService.getUserById(NON_EXISTING_ID);
 
         assertThat(actualUserDTO).isNull();
     }
@@ -94,34 +83,61 @@ public class UserServiceImplTests {
         User addedUser = addUserToDatabase();
 
         assertThat(addedUser.getClass()).isEqualTo(User.class);
-        assertThat(addedUser.getUserId()).isEqualTo(1);
-        assertThat(addedUser.getUsername()).isEqualTo("User");
-        assertThat(addedUser.getEmail()).isEqualTo("user@outlook.com");
-        assertThat(addedUser.getRole()).isEqualTo("USER");
-        assertThat(addedUser.getAddress()).isEqualTo("Address");
+        assertThat(addedUser.getUserId()).isEqualTo(USER_ID);
+        assertThat(addedUser.getUsername()).isEqualTo(USERNAME);
+        assertThat(addedUser.getEmail()).isEqualTo(EMAIL);
+        assertThat(addedUser.getRole()).isEqualTo(ROLE);
+        assertThat(addedUser.getAddress()).isEqualTo(ADDRESS);
         assertThat(addedUser.getBalance()).isEqualTo(0.0);
-        
-        assertThat(passwordEncoder.matches("password", addedUser.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(PASSWORD, addedUser.getPassword())).isTrue();
     }
 
     @Test
     void updateUser_shouldReturnUpdatedUser() {
-        User addedUser = addUserToDatabase();
-        int userId = addedUser.getUserId();
-
-        User userPassedToUpdateMethod = new User(userId, "UpdatedUsername", "updated@outlook.com",
-                "updatedPassword", "ADMIN", null, "updatedAddress", 100.00);
-
+        addUserToDatabase();
+        String ADMIN_ROLE = "ADMIN";
+        String UPDATED_ADDRESS = "updatedAddress";
+        String UPDATED_USERNAME = "UpdatedUsername";
+        String UPDATED_EMAIL = "updated@outlook.com";
+        String UPDATED_PASSWORD = "updatedPassword";
+        User userPassedToUpdateMethod = new User(USER_ID, UPDATED_USERNAME, UPDATED_EMAIL,
+                UPDATED_PASSWORD, ADMIN_ROLE, null, UPDATED_ADDRESS, SUFFICIENT_BALANCE);
         User updatedUser = userService.updateUser(userPassedToUpdateMethod);
 
         assertThat(updatedUser.getClass()).isEqualTo(User.class);
-        assertThat(updatedUser.getUserId()).isEqualTo(userId);
-        assertThat(updatedUser.getUsername()).isEqualTo("UpdatedUsername");
-        assertThat(updatedUser.getEmail()).isEqualTo("updated@outlook.com");
-        assertThat(updatedUser.getRole()).isEqualTo("ADMIN");
-        assertThat(updatedUser.getAddress()).isEqualTo("updatedAddress");
+        assertThat(updatedUser.getUserId()).isEqualTo(USER_ID);
+        assertThat(updatedUser.getUsername()).isEqualTo(UPDATED_USERNAME);
+        assertThat(updatedUser.getEmail()).isEqualTo(UPDATED_EMAIL);
+        assertThat(updatedUser.getRole()).isEqualTo(ADMIN_ROLE);
+        assertThat(updatedUser.getAddress()).isEqualTo(UPDATED_ADDRESS);
         assertThat(updatedUser.getBalance()).isEqualTo(100.00);
-        
-        assertThat(passwordEncoder.matches("updatedPassword", updatedUser.getPassword())).isTrue();
+        assertThat(passwordEncoder.matches(UPDATED_PASSWORD, updatedUser.getPassword())).isTrue();
+    }
+
+    @Test
+    void register_shouldCreateUserSuccessfully() {
+        UserRegisterDTO userRegisterDTO = getUserRegisterDTO();
+        userService.register(userRegisterDTO);
+
+        UserDTO savedUser = userService.getUserByUsername(USERNAME);
+        assertThat(savedUser).isNotNull();
+        assertThat(savedUser.getUsername()).isEqualTo(USERNAME);
+        assertThat(savedUser.getRole()).isEqualTo(ROLE);
+    }
+
+    @Test
+    void register_shouldThrowExceptionWhenUsernameAlreadyExists() {
+        addUserToDatabase();
+        UserRegisterDTO secondUser = getUserRegisterDTO();
+
+        assertThrows(UsernameTakenException.class, () -> userService.register(secondUser));
+    }
+
+    @Test
+    void verify_shouldReturnErrorWhenUsernameDoesNotExist() {
+        UserLoginDTO userLoginDTO = new UserLoginDTO(NON_EXISTING_USERNAME, PASSWORD);
+
+        String result = userService.verify(userLoginDTO);
+        assertThat(result).isEqualTo("Could not verify user");
     }
 }

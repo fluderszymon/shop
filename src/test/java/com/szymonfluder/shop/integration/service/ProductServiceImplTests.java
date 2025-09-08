@@ -1,7 +1,6 @@
 package com.szymonfluder.shop.integration.service;
 
 import com.szymonfluder.shop.dto.CartItemDTO;
-import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.integration.config.TestConfig;
@@ -18,31 +17,21 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @Import({ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-public class ProductServiceImplTests {
-
-    @Autowired
-    private ProductServiceImpl productService;
+public class ProductServiceImplTests extends AbstractServiceTest {
 
     @Autowired
     private ProductMapperImpl productMapper;
 
-    private Product addProductToDatabase() {
-        ProductCreateDTO productCreateDTO = new ProductCreateDTO(
-                "Product", "Product Description", 15.50, 100);
-        return productService.addProduct(productCreateDTO);
-    }
-
     private Product getProductMock() {
-        return new Product(1, "Product", "Product Description", 15.50, 100);
+        return new Product(PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
     }
 
     private ProductDTO getProductDTOMock() {
-        return new ProductDTO(1, "Product", "Product Description", 15.50, 100);
+        return new ProductDTO(PRODUCT_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
     }
 
     @Test
@@ -55,15 +44,15 @@ public class ProductServiceImplTests {
     void getAllProducts_shouldReturnAllProductDTOs() {
         addProductToDatabase();
         List<ProductDTO> actualProductDTOList = productService.getAllProducts();
-        ProductDTO expectedProductDTO = getProductDTOMock();
+        List<ProductDTO> expectedProductDTOList = List.of(getProductDTOMock());
 
-        assertThat(actualProductDTOList.contains(expectedProductDTO)).isTrue();
+        assertThat(actualProductDTOList).isEqualTo(expectedProductDTOList);
     }
 
     @Test
     void getProductsByIdList_shouldReturnEmptyListWhenThereIsNoProductWithIdInGivenList() {
         addProductToDatabase();
-        List<Integer> notExistingIdList = List.of(55);
+        List<Integer> notExistingIdList = List.of(NON_EXISTING_ID);
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(notExistingIdList);
 
         assertThat(actualProductDTOList.isEmpty()).isTrue();
@@ -71,26 +60,26 @@ public class ProductServiceImplTests {
 
     @Test
     void getProductsByIdList_shouldReturnProductDTOsHavingIdsInGivenList() {
-        Product addedProduct = addProductToDatabase();
-        List<Integer> existingIdList = List.of(addedProduct.getProductId());
-
+        addProductToDatabase();
+        List<Integer> existingIdList = List.of(PRODUCT_ID);
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(existingIdList);
-        ProductDTO expectedProductDTO = getProductDTOMock();
+        List<ProductDTO> expectedProductDTOList = List.of(getProductDTOMock());
 
-        assertThat(actualProductDTOList.contains(expectedProductDTO)).isTrue();
+        assertThat(actualProductDTOList).isEqualTo(expectedProductDTOList);
     }
 
     @Test
     void getProductsByIdList_shouldReturnEmptyListWhenIdListIsEmpty() {
         addProductToDatabase();
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(List.of());
+
         assertThat(actualProductDTOList.isEmpty()).isTrue();
     }
 
     @Test
     void getProductById_shouldReturnProductDTO() {
-        Product addedProduct = addProductToDatabase();
-        ProductDTO actualProductDTO = productService.getProductById(addedProduct.getProductId());
+        addProductToDatabase();
+        ProductDTO actualProductDTO = productService.getProductById(PRODUCT_ID);
         ProductDTO expectedProductDTO = getProductDTOMock();
 
         assertThat(actualProductDTO).isEqualTo(expectedProductDTO);
@@ -98,12 +87,8 @@ public class ProductServiceImplTests {
 
     @Test
     void getProductById_shouldThrowExceptionWhenProductNotFound() {
-        int productId = 1;
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> productService.getProductById(productId));
-
-        assertThat(exception.getMessage()).isEqualTo("Product with id: " + productId + " does not exist");
+        assertRuntimeExceptionWithMessage(() -> productService.getProductById(NON_EXISTING_ID), 
+                "Product with id: " + NON_EXISTING_ID + " does not exist");
     }
 
     @Test
@@ -116,55 +101,50 @@ public class ProductServiceImplTests {
 
     @Test
     void deleteProductById_shouldDeleteProduct() {
-        Product addedProduct = addProductToDatabase();
-        int productId = addedProduct.getProductId();
-        assertThat(productService.getProductById(productId)).isNotNull();
+        addProductToDatabase();
+        assertThat(productService.getProductById(PRODUCT_ID)).isNotNull();
 
-        productService.deleteProductById(productId);
-
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> productService.getProductById(productId));
-        assertThat(exception.getMessage()).isEqualTo("Product with id: " + productId + " does not exist");
+        productService.deleteProductById(PRODUCT_ID);
+        assertRuntimeExceptionWithMessage(() -> productService.getProductById(PRODUCT_ID), 
+                "Product with id: " + PRODUCT_ID + " does not exist");
     }
 
     @Test
     void updateProduct_shouldReturnUpdatedProduct() {
-        Product addedProduct = addProductToDatabase();
-        int productId = addedProduct.getProductId();
-
-        Product productPassedToUpdateMethod 
-            = new Product(productId, "Updated Product", "Updated Description", 100.50, 500);
+        addProductToDatabase();
+        String UPDATED_PRODUCT_NAME = "Updated Product";
+        String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
+        double UPDATED_PRODUCT_PRICE = 50.00;
+        int UPDATED_STOCK = 200;
+        Product productPassedToUpdateMethod
+            = new Product(PRODUCT_ID, UPDATED_PRODUCT_NAME, UPDATED_PRODUCT_DESCRIPTION, UPDATED_PRODUCT_PRICE, UPDATED_STOCK);
 
         Product updatedProduct = productService.updateProduct(productPassedToUpdateMethod);
         assertThat(updatedProduct).isEqualTo(productPassedToUpdateMethod);
     }
 
     @Test
-    void updateProduct_shouldThrowWhenThereIsNoProductToUpdateWithGivenId() {
-        Product addedProduct = addProductToDatabase();
-        int productId = addedProduct.getProductId();
-        Product productWithNonExistingProductId = new Product((productId + 1), "Non Existing Product", "Non Existing Product Description", 14.22, 200);
+    void updateProduct_shouldThrowExceptionWhenThereIsNoProductToUpdateWithGivenId() {
+        addProductToDatabase();
+        Product productWithNonExistingProductId = new Product(NON_EXISTING_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
 
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> productService.updateProduct(productWithNonExistingProductId));
-        assertThat(exception.getMessage()).isEqualTo("Product with id: " + (productId + 1) + " does not exist");
+        assertRuntimeExceptionWithMessage(() -> productService.updateProduct(productWithNonExistingProductId), 
+                "Product with id: " + NON_EXISTING_ID + " does not exist");
     }
 
     @Test
     void isEnough_shouldReturnTrueWhenStockIsEnough() {
         Product addedProduct = addProductToDatabase();
-        int productId = addedProduct.getProductId();
 
-        boolean result = productService.isEnough(productId, addedProduct.getStock());
+        boolean result = productService.isEnough(PRODUCT_ID, addedProduct.getStock());
         assertThat(result).isTrue();
     }
 
     @Test
     void isEnough_shouldReturnFalseWhenStockIsNotEnough() {
         Product addedProduct = addProductToDatabase();
-        int productId = addedProduct.getProductId();
-        boolean result = productService.isEnough(productId, addedProduct.getStock() + 1);
 
+        boolean result = productService.isEnough(PRODUCT_ID, addedProduct.getStock() + 1);
         assertThat(result).isFalse();
     }
 
@@ -172,13 +152,13 @@ public class ProductServiceImplTests {
     void updateProductsStock_shouldUpdateProductsStock() {
         Product addedProduct = addProductToDatabase();
         ProductDTO addedProductDTO = productMapper.productToProductDTO(addedProduct);
-        CartItemDTO cartItemDTO = new CartItemDTO(1, 1, addedProduct.getProductId(), 50);
+        CartItemDTO cartItemDTO = getCartItemDTOMock();
 
         Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = new HashMap<>();
         productDTOCartItemDTOMap.put(addedProductDTO, cartItemDTO);
         productService.updateProductsStock(productDTOCartItemDTOMap);
 
-        ProductDTO updatedProductDTO = productService.getProductById(addedProduct.getProductId());
+        ProductDTO updatedProductDTO = productService.getProductById(PRODUCT_ID);
 
         int actualStock = updatedProductDTO.getStock();
         int expectedStock = addedProductDTO.getStock() - cartItemDTO.getQuantity();

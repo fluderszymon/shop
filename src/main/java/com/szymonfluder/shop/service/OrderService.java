@@ -9,10 +9,14 @@ public interface OrderService {
     
     List<OrderDTO> getAllOrders();
     OrderDTO getOrderById(int orderId);
-
     List<OrderItemDTO> getAllOrderItems();
     List<OrderItemDTO> getAllOrderItemsByOrderId(int orderId);
 
-    void checkout(int userId, int cartId);
+    void checkout();
+
+    List<OrderDTO> getOrdersForCurrentUser();
+    List<OrderItemDTO> getOrderItemsInOrderByOrderIdForCurrentUser(int orderId);
+    List<OrderItemDTO> getOrderItemsForCurrentUser();
+    void validateOrderOwnership(int orderId);
 
 }

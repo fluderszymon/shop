@@ -77,6 +77,7 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.save(updatedProduct);
     }
 
+    @Override
     public boolean isEnough(int productId, int orderedQuantity) {
         ProductDTO productDTO = getProductById(productId);
         return productDTO.getStock() >= orderedQuantity;

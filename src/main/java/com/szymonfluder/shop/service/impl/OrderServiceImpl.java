@@ -14,6 +14,7 @@ import com.szymonfluder.shop.service.OrderService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,15 +30,14 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
-    private final CartRepository cartRepository;
 
 
     @Autowired
     public OrderServiceImpl(OrderRepository orderRepository, OrderMapper orderMapper,
                             OrderItemRepository orderItemRepository, OrderItemMapper orderItemMapper,
                             CartService cartService, ProductService productService,
-                            UserService userService,
-                            ProductRepository productRepository, UserRepository userRepository, CartRepository cartRepository) {
+                            UserService userService, ProductRepository productRepository, 
+                            UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.orderItemRepository = orderItemRepository;
@@ -47,7 +47,6 @@ public class OrderServiceImpl implements OrderService {
         this.userService = userService;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
-        this.cartRepository = cartRepository;
     }
 
     @Override
@@ -80,7 +79,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     @Override
-    public void checkout(int userId, int cartId) {
+    public void checkout() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        int userId = currentUser.getUserId();
+        int cartId = currentUser.getCartId();
         List<CartItemDTO> cartItemDTOList = cartService.getAllCartItemsByCartId(cartId);
         validateCartNotEmpty(cartItemDTOList);
 
@@ -117,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
+    private void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
                                  Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
                                  double userBalance, double cartTotal) {
 
@@ -146,13 +148,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Transactional
-    public void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
+    private void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             cartService.deleteCartItemById(cartItemDTO.getCartItemId());
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         user.setCart(null);
-        cartRepository.deleteById(cartId);
     }
 
     private void addOrderItemFromCartItem(CartItemDTO cartItemDTO, int orderId) {
@@ -178,7 +179,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private Map<ProductDTO, CartItemDTO> mapProductsDTOsToCartItemDTOs(List<CartItemDTO> cartItemDTOList) {
-
         List<Integer> cartItemProductIds = extractProductIdsFromCartItemDTOList(cartItemDTOList);
         List<ProductDTO> productDTOList = productService.getProductsByIdList(cartItemProductIds);
 
@@ -195,5 +195,44 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         return result;
+    }
+
+    @Override
+    public List<OrderDTO> getOrdersForCurrentUser() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        return orderRepository.findAllOrdersByUserId(currentUser.getUserId())
+                .stream()
+                .map(orderMapper::orderToOrderDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<OrderItemDTO> getOrderItemsInOrderByOrderIdForCurrentUser(int orderId) {
+        validateOrderOwnership(orderId);
+        return orderItemRepository.findAllOrderItemsInOrderByOrderId(orderId)
+                .stream()
+                .map(orderItemMapper::orderItemToOrderItemDTO)
+                .collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<OrderItemDTO> getOrderItemsForCurrentUser() {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        return orderItemRepository.findAllOrderItemsByUserId(currentUser.getUserId())
+                .stream()
+                .map(orderItemMapper::orderItemToOrderItemDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void validateOrderOwnership(int orderId) {
+        UserDTO currentUser = userService.getCurrentUserDTO();
+        boolean isOwner = orderRepository.findAllOrdersByUserId(currentUser.getUserId())
+                .stream()
+                .anyMatch(order -> order.getOrderId() == orderId);
+                
+        if (!isOwner) {
+            throw new AccessDeniedException("You are not allowed to access this order");
+        }
     }
 }

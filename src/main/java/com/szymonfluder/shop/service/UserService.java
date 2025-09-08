@@ -21,4 +21,6 @@ public interface UserService {
 
     void register(UserRegisterDTO userRegisterDTO) throws Exception;
     String verify(UserLoginDTO userLoginDTO);
+
+    UserDTO getCurrentUserDTO();
 }

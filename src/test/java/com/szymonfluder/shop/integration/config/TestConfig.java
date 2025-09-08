@@ -1,6 +1,7 @@
 package com.szymonfluder.shop.integration.config;
 
 import com.szymonfluder.shop.security.JWTService;
+import com.szymonfluder.shop.security.JWTServiceImpl;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -15,7 +16,7 @@ public class TestConfig {
     @Bean
     @Primary
     public JWTService jwtService() {
-        return mock(JWTService.class);
+        return new JWTServiceImpl();
     }
 
     @Bean

@@ -34,7 +34,6 @@ public abstract class AbstractControllerTest {
         when(userDetailsService.loadUserByUsername("username")).thenReturn(userDetails);
     }
 
-    
     protected void setupRateLimitMocks(RateLimitService rateLimitService) {
         when(rateLimitService.tryConsume(any(String.class), any(Integer.class))).thenReturn(true);
         when(rateLimitService.getAvailableTokens(any(String.class))).thenReturn(59L);
