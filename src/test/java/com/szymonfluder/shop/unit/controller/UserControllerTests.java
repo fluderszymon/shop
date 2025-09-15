@@ -105,8 +105,8 @@ public class UserControllerTests extends AbstractControllerTest {
     @Test
     @WithMockUser(authorities=("ADMIN"))
     void addUser_shouldReturnCreatedUser() throws Exception {
-        User user = new User(1, "user", "user@outlook.com", "password", "USER", null, "User's Address", 0.0);
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("user", "user@outlook.com", "password", "User's Address");
+        User user = new User(1, "user", "user@outlook.com", "MyStrongPassword1!", "USER", null, "User's Address", 0.0);
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("user", "user@outlook.com", "MyStrongPassword1!", "User's Address");
         when(userService.addUser(any(UserRegisterDTO.class))).thenReturn(user);
 
         mockMvc.perform(post("/users")
@@ -161,7 +161,7 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     void register_shouldRegisterUser() throws Exception {
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "password", "New Address");
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "MyStrongPassword1!", "New Address");
         doNothing().when(userService).register(any(UserRegisterDTO.class));
 
         mockMvc.perform(post("/users/register")

@@ -5,6 +5,7 @@ import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public User addUser(@RequestBody UserRegisterDTO userRegisterDTO) {
+    public User addUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO) {
         return userService.addUser(userRegisterDTO);
     }
 
@@ -53,12 +54,12 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public void register(@RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
+    public void register(@Valid @RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
         userService.register(userRegisterDTO);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody UserLoginDTO userLoginDTO) {
+    public String login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         return userService.verify(userLoginDTO);
     }
 }
