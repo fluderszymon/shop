@@ -58,6 +58,13 @@ Entities     → Data model
 
 ## 🚀 Quick Start
 
+### Docker
+```bash
+docker-compose up --build
+```
+Access: http://localhost:8080
+
+### Local Development
 **Prerequisites:** Java 17+, MySQL 8.0+, Maven 3.6+
 
 **Setup:**

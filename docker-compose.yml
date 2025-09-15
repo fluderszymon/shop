@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: shop-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: admin
+      MYSQL_DATABASE: shop
+      MYSQL_USER: shopuser
+      MYSQL_PASSWORD: shoppass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database_populate.sql:/docker-entrypoint-initdb.d/database_populate.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "shopuser", "-pshoppass"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - shop-network
+
+  app:
+    build: .
+    container_name: shop-app
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/shop
+      SPRING_DATASOURCE_USERNAME: shopuser
+      SPRING_DATASOURCE_PASSWORD: shoppass
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - shop-network
+
+volumes:
+  mysql_data:
+
+networks:
+  shop-network:
+    driver: bridge
