@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.unit.mapper;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import com.szymonfluder.shop.entity.Order;
@@ -14,7 +15,7 @@ public class OrderMapperTests {
 
     private final int USER_ID = 1;
     private final int ORDER_ID = 1;
-    private final double TOTAL_PRICE = 100.0;
+    private final BigDecimal TOTAL_PRICE = BigDecimal.valueOf(100.00);
     private final LocalDate ORDER_DATE = LocalDate.of(2020, 1, 13);
     
     private final OrderMapper orderMapper = new OrderMapperImpl();
@@ -30,7 +31,7 @@ public class OrderMapperTests {
     }
 
     @Test
-    void orderToOrderDTO_shouldMapOrderToOrderDTO() {
+    void orderToOrderDTO_shouldMapOrderToOrderDTO_whenValidDataProvided() {
         Order givenOrder = createOrder();
         OrderDTO expectedOrderDTO = createOrderDTO();
         OrderDTO mappedOrderDTO = orderMapper.orderToOrderDTO(givenOrder);
@@ -39,7 +40,7 @@ public class OrderMapperTests {
     }
 
     @Test
-    void orderDTOToOrder_shouldMapOrderDTOToOrder() {
+    void orderDTOToOrder_shouldMapOrderDTOToOrder_whenValidDataProvided() {
         OrderDTO givenOrderDTO = createOrderDTO();
         Order expectedOrder = createOrder();
         Order mappedOrder = orderMapper.orderDTOToOrder(givenOrderDTO);

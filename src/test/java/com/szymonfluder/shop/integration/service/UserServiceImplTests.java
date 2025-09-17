@@ -4,6 +4,7 @@ import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.exception.UsernameTakenException;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.UserMapperImpl;
@@ -13,6 +14,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.annotation.DirtiesContext;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,18 +32,18 @@ public class UserServiceImplTests extends AbstractServiceTest {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     private UserDTO getUserDTOMock() {
-        double INITIAL_BALANCE = 0.00;
+        BigDecimal INITIAL_BALANCE = BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP);
         return new UserDTO(USER_ID, USERNAME, EMAIL, ROLE, USER_ID, ADDRESS, INITIAL_BALANCE);
     }
 
     @Test
-    void getAllUsers_shouldReturnEmptyList() {
+    void getAllUsers_shouldReturnEmptyList_whenNoUsersExist() {
         List<UserDTO> actualUserDTOList = userService.getAllUsers();
         assertThat(actualUserDTOList.isEmpty()).isTrue();
     }
 
     @Test
-    void getAllUsers_shouldReturnAllUserDTOs() {
+    void getAllUsers_shouldReturnAllUserDTOs_whenUsersExist() {
         addUserToDatabase();
         List<UserDTO> actualUserDTOList = userService.getAllUsers();
         List<UserDTO> expectedUserDTOList = List.of(getUserDTOMock());
@@ -48,7 +52,7 @@ public class UserServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getUserByUsername_shouldReturnUserDTO() {
+    void getUserByUsername_shouldReturnUserDTO_whenUserExists() {
         User addedUser = addUserToDatabase();
         UserDTO actualUserDTO = userService.getUserByUsername(addedUser.getUsername());
         UserDTO expectedUserDTO = getUserDTOMock();
@@ -57,13 +61,12 @@ public class UserServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getUserByUsername_shouldReturnNullWhenUserNotFound() {
-        UserDTO actualUserDTO = userService.getUserByUsername(NON_EXISTING_USERNAME);
-        assertThat(actualUserDTO).isNull();
+    void getUserByUsername_shouldThrowEntityNotFoundException_whenUserNotFound() {
+        assertThrows(EntityNotFoundException.class, () -> userService.getUserByUsername(NON_EXISTING_USERNAME));
     }
 
     @Test
-    void getUserById_shouldReturnUserDTO() {
+    void getUserById_shouldReturnUserDTO_whenUserExists() {
         addUserToDatabase();
         UserDTO actualUserDTO = userService.getUserById(USER_ID);
         UserDTO expectedUserDTO = getUserDTOMock();
@@ -72,14 +75,12 @@ public class UserServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getUserById_shouldThrowExceptionWhenUserWithGivenIdIsNotPresent() {
-        UserDTO actualUserDTO = userService.getUserById(NON_EXISTING_ID);
-
-        assertThat(actualUserDTO).isNull();
+    void getUserById_shouldThrowEntityNotFoundException_whenUserNotFound() {
+        assertThrows(EntityNotFoundException.class, () -> userService.getUserById(NON_EXISTING_ID));
     }
 
     @Test
-    void addUser_shouldReturnAddedUser() {
+    void addUser_shouldReturnAddedUser_whenValidDataProvided() {
         User addedUser = addUserToDatabase();
 
         assertThat(addedUser.getClass()).isEqualTo(User.class);
@@ -88,12 +89,12 @@ public class UserServiceImplTests extends AbstractServiceTest {
         assertThat(addedUser.getEmail()).isEqualTo(EMAIL);
         assertThat(addedUser.getRole()).isEqualTo(ROLE);
         assertThat(addedUser.getAddress()).isEqualTo(ADDRESS);
-        assertThat(addedUser.getBalance()).isEqualTo(0.0);
+        assertThat(addedUser.getBalance()).isEqualTo(BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP));
         assertThat(passwordEncoder.matches(PASSWORD, addedUser.getPassword())).isTrue();
     }
 
     @Test
-    void updateUser_shouldReturnUpdatedUser() {
+    void updateUser_shouldReturnUpdatedUser_whenUserExists() {
         addUserToDatabase();
         String ADMIN_ROLE = "ADMIN";
         String UPDATED_ADDRESS = "updatedAddress";
@@ -110,12 +111,12 @@ public class UserServiceImplTests extends AbstractServiceTest {
         assertThat(updatedUser.getEmail()).isEqualTo(UPDATED_EMAIL);
         assertThat(updatedUser.getRole()).isEqualTo(ADMIN_ROLE);
         assertThat(updatedUser.getAddress()).isEqualTo(UPDATED_ADDRESS);
-        assertThat(updatedUser.getBalance()).isEqualTo(100.00);
+        assertThat(updatedUser.getBalance()).isEqualTo(BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP));
         assertThat(passwordEncoder.matches(UPDATED_PASSWORD, updatedUser.getPassword())).isTrue();
     }
 
     @Test
-    void register_shouldCreateUserSuccessfully() {
+    void register_shouldCreateUserSuccessfully_whenValidDataProvided() {
         UserRegisterDTO userRegisterDTO = getUserRegisterDTO();
         userService.register(userRegisterDTO);
 
@@ -126,7 +127,7 @@ public class UserServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void register_shouldThrowExceptionWhenUsernameAlreadyExists() {
+    void register_shouldThrowUsernameTakenException_whenUsernameAlreadyExists() {
         addUserToDatabase();
         UserRegisterDTO secondUser = getUserRegisterDTO();
 
@@ -134,7 +135,7 @@ public class UserServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void verify_shouldReturnErrorWhenUsernameDoesNotExist() {
+    void verify_shouldNotVerifyUser_whenUsernameDoesNotExist() {
         UserLoginDTO userLoginDTO = new UserLoginDTO(NON_EXISTING_USERNAME, PASSWORD);
 
         String result = userService.verify(userLoginDTO);

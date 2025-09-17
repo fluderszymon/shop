@@ -29,7 +29,7 @@ public class CartMapperTests {
     }
 
     @Test
-    void cartToCartDTO_shouldMapCartToCartDTO() {
+    void cartToCartDTO_shouldMapCartToCartDTO_whenValidDataProvided() {
         Cart givenCart = createCart();
         CartDTO expectedCartDTO = createCartDTO();
         CartDTO mappedCartDTO = cartMapper.CartToCartDTO(givenCart);
@@ -38,7 +38,7 @@ public class CartMapperTests {
     }
 
     @Test
-    void cartDTOToCart_shouldMapCartDTOToCart() {
+    void cartDTOToCart_shouldMapCartDTOToCart_whenValidDataProvided() {
         CartDTO givenCartDTO = createCartDTO();
         Cart expectedCart = createCart();
         Cart mappedCart = cartMapper.CartDTOToCart(givenCartDTO);

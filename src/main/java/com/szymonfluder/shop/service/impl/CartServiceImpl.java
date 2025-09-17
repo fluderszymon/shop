@@ -5,6 +5,8 @@ import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.UserDTO;
 import com.szymonfluder.shop.entity.Cart;
 import com.szymonfluder.shop.entity.CartItem;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
+import com.szymonfluder.shop.exception.OutOfStockException;
 import com.szymonfluder.shop.mapper.CartItemMapper;
 import com.szymonfluder.shop.mapper.CartMapper;
 import com.szymonfluder.shop.repository.CartItemRepository;
@@ -13,13 +15,14 @@ import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
+import com.szymonfluder.shop.exception.CartAccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,7 +57,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO getCartById(int cartId) {
-        Cart foundCart = cartRepository.findById(cartId).orElseThrow(() -> new RuntimeException("Cart not found"));
+        Cart foundCart = cartRepository.findById(cartId).orElseThrow(() -> new EntityNotFoundException("Cart.class", cartId));
         return cartMapper.CartToCartDTO(foundCart);
     }
 
@@ -73,23 +76,24 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO updateCart(CartDTO cartDTO) {
-        Optional<Cart> tempCart = cartRepository.findById(cartDTO.getCartId());
+        cartRepository.findById(cartDTO.getCartId())
+                .orElseThrow(() -> new EntityNotFoundException("Cart", cartDTO.getCartId()));
+        
         CartDTO updatedCartDTO = new CartDTO();
-        if(tempCart.isPresent()) {
-            updatedCartDTO.setCartId(cartDTO.getCartId());
-            updatedCartDTO.setUserId(cartDTO.getUserId());
-        }
+        updatedCartDTO.setCartId(cartDTO.getCartId());
+        updatedCartDTO.setUserId(cartDTO.getUserId());
+        
         Cart updatedCart = cartRepository.save(cartMapper.CartDTOToCart(updatedCartDTO));
         return cartMapper.CartToCartDTO(updatedCart);
     }
 
     @Override
-    public double getCartTotal(int cartId) {
+    public BigDecimal getCartTotal(int cartId) {
         ArrayList<CartItemDTO> cartItemDTOs = (ArrayList<CartItemDTO>) getAllCartItemsByCartId(cartId);
-        double total = 0;
+        BigDecimal total = BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP);
         for (CartItemDTO cartItemDTO : cartItemDTOs) {
-            double productPrice = productService.getProductById(cartItemDTO.getProductId()).getPrice();
-            total += cartItemDTO.getQuantity() * productPrice;
+            BigDecimal productPrice = productService.getProductById(cartItemDTO.getProductId()).getPrice();
+            total = total.add(productPrice.multiply(BigDecimal.valueOf(cartItemDTO.getQuantity())));
         }
         return total;
     }
@@ -110,14 +114,17 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartItemDTO getCartItemById(int cartItemId) {
         CartItem foundCartItem = cartItemRepository.findById(cartItemId).
-                                    orElseThrow(() -> new RuntimeException("CartItem not found"));
+                                    orElseThrow(() -> new EntityNotFoundException("CartItem", cartItemId));
         return cartItemMapper.cartItemToCartItemDTO(foundCartItem);
     }
 
     @Override
     public CartItemDTO addCartItem(CartItemDTO cartItemDTO) {
-        if (!productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
-            throw new RuntimeException("Not enough products in stock");
+        int productId = cartItemDTO.getProductId();
+        int quantityInCart = cartItemDTO.getQuantity();
+        int availableStock = productService.getProductById(productId).getStock();
+        if (quantityInCart > availableStock) {
+            throw new OutOfStockException(productId, availableStock, quantityInCart);
         }
         CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
         return cartItemMapper.cartItemToCartItemDTO(savedCartItem);
@@ -131,14 +138,15 @@ public class CartServiceImpl implements CartService {
     @Transactional
     @Override
     public CartItemDTO updateCartItem(CartItemDTO cartItemDTO) {
-        Optional<CartItem> tempCartItem = cartItemRepository.findById(cartItemDTO.getCartItemId());
+        cartItemRepository.findById(cartItemDTO.getCartItemId())
+                .orElseThrow(() -> new EntityNotFoundException("CartItem", cartItemDTO.getCartItemId()));
+        
         CartItemDTO updatedCartItemDTO = new CartItemDTO();
-        if(tempCartItem.isPresent()) {
-            updatedCartItemDTO.setCartItemId(tempCartItem.get().getCartItemId());
-            updatedCartItemDTO.setQuantity(cartItemDTO.getQuantity());
-            updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
-            updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
-        }
+        updatedCartItemDTO.setCartItemId(cartItemDTO.getCartItemId());
+        updatedCartItemDTO.setQuantity(cartItemDTO.getQuantity());
+        updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
+        updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
+        
         CartItem updatedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(updatedCartItemDTO));
         return cartItemMapper.cartItemToCartItemDTO(updatedCartItem);
     }
@@ -147,7 +155,7 @@ public class CartServiceImpl implements CartService {
     public CartDTO getCartDTOForCurrentUser() {
         UserDTO currentUserDTO = userService.getCurrentUserDTO();
         return cartRepository.findCartDTOByUserId(currentUserDTO.getUserId())
-                .orElseThrow(() -> new RuntimeException("Cart not found for current user"));
+                .orElseThrow(() -> new EntityNotFoundException("Cart", currentUserDTO.getUserId()));
     }
 
     @Override
@@ -182,14 +190,14 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public double getCartTotalForCurrentUser() {
+    public BigDecimal getCartTotalForCurrentUser() {
         CartDTO myCartDTO = getCartDTOForCurrentUser();
         return getCartTotal(myCartDTO.getCartId());
     }
 
     private void validateCartItemOwnership(int cartItemId) {
         CartItem cartItem = cartItemRepository.findById(cartItemId)
-                .orElseThrow(() -> new RuntimeException("CartItem not found"));
+                .orElseThrow(() -> new EntityNotFoundException("CartItem", cartItemId));
         
         validateCartOwnership(cartItem.getCart().getCartId());
     }
@@ -205,7 +213,7 @@ public class CartServiceImpl implements CartService {
                 .orElse(false);
                 
         if (!isOwner) {
-            throw new AccessDeniedException("You are not allowed to access this cart item");
+            throw new CartAccessDeniedException("You are not allowed to access this cart");
         }
     }
 }

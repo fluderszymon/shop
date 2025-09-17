@@ -26,7 +26,7 @@ class JWTServiceImplTests {
     private HttpServletRequest request;
 
     @Test
-    void generateToken_shouldReturnValidToken() {
+    void generateToken_shouldReturnValidToken_whenUsernameProvided() {
         String givenUsername = "username";
         String token = jwtService.generateToken(givenUsername);
         
@@ -36,7 +36,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void extractUsername_shouldExtractUsernameFromValidToken() {
+    void extractUsername_shouldExtractUsernameFromValidToken_whenValidTokenProvided() {
         String username = "username";
         String token = jwtService.generateToken(username);
 
@@ -46,7 +46,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void validateToken_shouldReturnTrueForValidTokenAndUser() {
+    void validateToken_shouldReturnTrue_whenValidTokenAndUserProvided() {
         String username = "username";
         String token = jwtService.generateToken(username);
         when(userDetails.getUsername()).thenReturn(username);
@@ -57,7 +57,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void validateToken_shouldReturnFalseForWrongUsername() {
+    void validateToken_shouldReturnFalse_whenWrongUsernameProvided() {
         String username = "username";
         String wrongUsername = "wronguser";
         String token = jwtService.generateToken(username);
@@ -68,7 +68,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void extractTokenFromHeader_shouldExtractTokenFromValidHeader() {
+    void extractTokenFromHeader_shouldExtractTokenFromValidHeader_whenValidAuthorizationHeaderProvided() {
         String expectedToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test.signature";
         when(request.getHeader("Authorization")).thenReturn("Bearer " + expectedToken);
 
@@ -78,7 +78,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void extractTokenFromHeader_shouldThrowExceptionForMissingHeader() {
+    void extractTokenFromHeader_shouldThrowException_whenHeaderIsMissing() {
         when(request.getHeader("Authorization")).thenReturn(null);
 
         RuntimeException exception = assertThrows(RuntimeException.class, 
@@ -87,7 +87,7 @@ class JWTServiceImplTests {
     }
 
     @Test
-    void extractTokenFromHeader_shouldThrowExceptionForHeaderWithoutBearer() {
+    void extractTokenFromHeader_shouldThrowException_whenHeaderDoesNotContainBearer() {
         when(request.getHeader("Authorization")).thenReturn("InvalidHeader");
 
         RuntimeException exception = assertThrows(RuntimeException.class, 

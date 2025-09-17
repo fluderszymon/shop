@@ -5,6 +5,7 @@ import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.CartItemMapperImpl;
 import com.szymonfluder.shop.mapper.CartMapperImpl;
@@ -23,9 +24,11 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
@@ -69,36 +72,36 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void checkout_shouldCompleteCheckout() {
+    void checkout_shouldCompleteCheckout_whenValidCartAndSufficientBalance() {
         setupCompleteCartScenario();
         orderService.checkout();
 
         assertThat(orderService.getOrderById(USER_ID)).isNotNull();
         assertThat(orderService.getAllOrderItemsByOrderId(USER_ID)).isNotNull();
-        assertThat(userService.getUserBalance(USER_ID)).isEqualTo(0.00);
+        assertThat(userService.getUserBalance(USER_ID)).isEqualTo(BigDecimal.valueOf(0.00).setScale(2));
         assertThat(cartService.getAllCartItemsByCartId(USER_ID)).isEqualTo(List.of());
     }
 
     @Test
-    void checkout_shouldThrowExceptionWhenCartIsEmpty() {
+    void checkout_shouldThrowEmptyCartException_whenCartIsEmpty() {
         setupEmptyCartScenario();
         assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Cart is empty");
     }
 
     @Test
-    void checkout_shouldThrowExceptionWhenBalanceIsInsufficient() {
+    void checkout_shouldThrowInsufficientBalanceException_whenBalanceIsInsufficient() {
         setupInsufficientBalanceScenario();
         assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Insufficient balance");
     }
 
     @Test
-    void checkout_shouldThrowExceptionWhenStockIsInsufficient() {
+    void checkout_shouldThrowOutOfStockException_whenStockIsInsufficient() {
         setupCartWithNotEnoughStockInProducts();
         assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Not enough products in stock");
     }
 
     @Test
-    void getAllOrders_shouldGetAllOrderDTOs() {
+    void getAllOrders_shouldGetAllOrderDTOs_whenOrdersExist() {
         addOrderToDatabase();
         List<OrderDTO> actualOrderDTOList = orderService.getAllOrders();
         OrderDTO expectedOrderDTO = getOrderDTOMock();
@@ -107,7 +110,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrderById_shouldReturnOrderDTO() {
+    void getOrderById_shouldReturnOrderDTO_whenOrderExists() {
         addOrderToDatabase();
         OrderDTO actualOrderDTO = orderService.getOrderById(ORDER_ID);
         OrderDTO expectedOrderDTO = getOrderDTOMock();
@@ -116,12 +119,12 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrderById_shouldThrowExceptionWhenOrderNotFound() {
-        assertRuntimeExceptionWithMessage(() -> orderService.getOrderById(ORDER_ID), "Order with given orderId not found");
+    void getOrderById_shouldThrowEntityNotFoundException_whenOrderNotFound() {
+        assertThrows(EntityNotFoundException.class, () -> orderService.getOrderById(ORDER_ID));
     }
 
     @Test
-    void getAllOrderItems_shouldGetAllOrderItemDTOs() {
+    void getAllOrderItems_shouldGetAllOrderItemDTOs_whenOrderItemsExist() {
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItems();
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
@@ -129,7 +132,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getAllOrderItemsByOrderId_shouldGetAllOrderItemDTOsByOrderId() {
+    void getAllOrderItemsByOrderId_shouldGetAllOrderItemDTOsByOrderId_whenOrderExists() {
         addOrderToDatabase();
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getAllOrderItemsByOrderId(ORDER_ID);
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
@@ -137,9 +140,9 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrdersForCurrentUser_shouldGetAllOrderDTOsForCurrentUser() {
-        authenticateUser(USERNAME);
+    void getOrdersForCurrentUser_shouldGetAllOrderDTOsForCurrentUser_whenUserIsAuthenticated() {
         addOrderToDatabase();
+        authenticateUser(USERNAME);
         List<OrderDTO> actualOrderDTOList = orderService.getOrdersForCurrentUser();
         List<OrderDTO> expectedOrderDTOList = List.of(getOrderDTOMock());
 
@@ -147,9 +150,9 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrderItemsForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
-        authenticateUser(USERNAME);
+    void getOrderItemsForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser_whenUserIsAuthenticated() {
         addOrderToDatabase();
+        authenticateUser(USERNAME);
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsForCurrentUser();
         List<OrderItemDTO> expectedOrderItemDTOList = List.of(getOrderItemDTOMock());
 
@@ -157,7 +160,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser() {
+    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldGetAllOrderItemDTOsForCurrentUser_whenUserOwnsOrder() {
         addOrderToDatabase();
         authenticateUser(USERNAME);
         List<OrderItemDTO> actualOrderItemDTOList = orderService.getOrderItemsInOrderByOrderIdForCurrentUser(ORDER_ID);
@@ -167,17 +170,17 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldThrowAccessDeniedExceptionWhenNotOwner() {
+    void getOrderItemsInOrderByOrderIdForCurrentUser_shouldThrowAccessDeniedException_whenUserDoesNotOwnOrder() {
         addOrderToDatabase();
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, EMAIL, PASSWORD, ADDRESS));
         
         authenticateUser(OTHER_USERNAME);
-        assertAccessDeniedException(() -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(USER_ID), 
-                "You are not allowed to access this order");
+        assertOrderAccessDeniedException(() -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(USER_ID)
+        );
     }
 
     @Test
-    void validateOrderOwnership_shouldAllowAccessWhenUserOwnsOrder() {
+    void validateOrderOwnership_shouldAllowAccess_whenUserOwnsOrder() {
         addOrderToDatabase();
         authenticateUser(USERNAME);
         assertThatCode(() -> orderService.validateOrderOwnership(ORDER_ID))
@@ -185,13 +188,13 @@ public class OrderServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void validateOrderOwnership_shouldThrowAccessDeniedExceptionWhenUserDoesNotOwnOrder() {
+    void validateOrderOwnership_shouldThrowAccessDeniedException_whenUserDoesNotOwnOrder() {
         addOrderToDatabase();
         
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, OTHER_EMAIL, PASSWORD, ADDRESS));
         authenticateUser(OTHER_USERNAME);
 
-        assertAccessDeniedException(() -> orderService.validateOrderOwnership(USER_ID), 
-                "You are not allowed to access this order");
+        assertOrderAccessDeniedException(() -> orderService.validateOrderOwnership(USER_ID)
+        );
     }
 }

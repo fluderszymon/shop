@@ -34,7 +34,7 @@ public class CartItemMapperTests {
     }
 
     @Test
-    void cartItemToCartItemDTO_shouldMapCartItemToCartItemDTO() {
+    void cartItemToCartItemDTO_shouldMapCartItemToCartItemDTO_whenValidDataProvided() {
         CartItem givenCartItem = createCartItem();
         CartItemDTO expectedCartItemDTO = createCartItemDTO();
         CartItemDTO mappedCartItemDTO = cartItemMapper.cartItemToCartItemDTO(givenCartItem);
@@ -43,7 +43,7 @@ public class CartItemMapperTests {
     }
 
     @Test
-    void cartItemDTOToCartItem_shouldMapCartItemDTOToCartItem() {
+    void cartItemDTOToCartItem_shouldMapCartItemDTOToCartItem_whenValidDataProvided() {
         CartItemDTO givenCartItemDTO = createCartItemDTO();
         CartItem expectedCartItem = createCartItem();
         CartItem mappedCartItem = cartItemMapper.cartItemDTOToCartItem(givenCartItemDTO);

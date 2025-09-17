@@ -1,11 +1,11 @@
 package com.szymonfluder.shop.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,20 +19,15 @@ public class User {
     @Column(name="user_id")
     private int userId;
 
-    @NotBlank
     @Column(name="username", nullable = false)
     private String username;
 
-    @NotBlank
-    @Email
     @Column(name="email", nullable = false)
     private String email;
 
-    @NotBlank
     @Column(name="password", nullable = false)
     private String password;
 
-    @NotBlank
     @Column(name="role", nullable = false)
     private String role;
 
@@ -42,7 +37,7 @@ public class User {
     @Column(name="address")
     private String address;
 
-    @Column(name="balance")
-    private double balance;
+    @Column(name="balance", precision = 10, scale = 2)
+    private BigDecimal balance;
 
 }

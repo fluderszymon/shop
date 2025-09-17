@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -68,16 +70,17 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoiceDTO.setOrderItemDTOList(orderItemDTOList);
         invoiceDTO.setInvoiceDate(orderDTO.getOrderDate());
         invoiceDTO.setTotalPrice(calculateTotalPrice(orderItemDTOList));
-        invoiceDTO.setUserName(userDTO.getUsername());
-        invoiceDTO.setUserAddress(userDTO.getAddress());
+        invoiceDTO.setUsername(userDTO.getUsername());
+        invoiceDTO.setAddress(userDTO.getAddress());
 
         return invoiceDTO;
     }
 
-    private double calculateTotalPrice(List<OrderItemDTO> orderItemDTOList) {
-        double total = 0;
+    private BigDecimal calculateTotalPrice(List<OrderItemDTO> orderItemDTOList) {
+        BigDecimal total = BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP);
         for (OrderItemDTO orderItemDTO : orderItemDTOList) {
-            total += orderItemDTO.getPriceAtPurchase() * orderItemDTO.getQuantity();
+            BigDecimal itemTotal = orderItemDTO.getPriceAtPurchase().multiply(BigDecimal.valueOf(orderItemDTO.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+            total = total.add(itemTotal);
         }
         return total;
     }

@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -22,8 +24,8 @@ public class Product {
     @Column(name="description")
     private String description;
 
-    @Column(name="price")
-    private double price;
+    @Column(name="price", precision = 10, scale = 2)
+    private BigDecimal price;
 
     @Column(name="stock")
     private int stock;

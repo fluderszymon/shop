@@ -6,12 +6,12 @@ import jakarta.validation.Payload;
 import java.lang.annotation.*;
 
 @Documented
-@Constraint(validatedBy = StrongPasswordValidator.class)
+@Constraint(validatedBy = ValidPriceValidator.class)
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface StrongPassword {
+public @interface ValidPrice {
     
-    String message() default "Password must be between 8 and 20 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character";
+    String message() default "Price must be a valid positive number with up to 2 decimal places between 0.01 and 999999.99";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

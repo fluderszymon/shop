@@ -7,12 +7,12 @@ import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.mapper.ProductMapper;
 import com.szymonfluder.shop.repository.ProductRepository;
 import com.szymonfluder.shop.service.ProductService;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,7 +46,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDTO getProductById(int productId) {
-        Product foundProduct = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Product with id: " + productId + " does not exist"));
+        Product foundProduct = productRepository.findById(productId).orElseThrow(() -> new EntityNotFoundException("Product", productId));
         return productMapper.productToProductDTO(foundProduct);
     }
 
@@ -63,17 +63,16 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Product updateProduct(Product product) {
-        Optional<Product> tempProduct = productRepository.findById(product.getProductId());
+        productRepository.findById(product.getProductId())
+                .orElseThrow(() -> new EntityNotFoundException("Product", product.getProductId()));
+        
         Product updatedProduct = new Product();
-        if (tempProduct.isPresent()) {
-            updatedProduct.setProductId(product.getProductId());
-            updatedProduct.setName(product.getName());
-            updatedProduct.setDescription(product.getDescription());
-            updatedProduct.setPrice(product.getPrice());
-            updatedProduct.setStock(product.getStock());
-        } else {
-            throw new RuntimeException("Product with id: " + product.getProductId() + " does not exist");
-        }
+        updatedProduct.setProductId(product.getProductId());
+        updatedProduct.setName(product.getName());
+        updatedProduct.setDescription(product.getDescription());
+        updatedProduct.setPrice(product.getPrice());
+        updatedProduct.setStock(product.getStock());
+        
         return productRepository.save(updatedProduct);
     }
 
@@ -86,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void updateProductsStock(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
         for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
-            Product updatedProduct = productRepository.findById(mapEntry.getKey().getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
+            Product updatedProduct = productRepository.findById(mapEntry.getKey().getProductId()).orElseThrow(() -> new EntityNotFoundException("Product", mapEntry.getKey().getProductId()));
             updatedProduct.setStock(mapEntry.getKey().getStock()-mapEntry.getValue().getQuantity());
             updateProduct(updatedProduct);
         }

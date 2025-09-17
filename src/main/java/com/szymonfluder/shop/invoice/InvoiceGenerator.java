@@ -17,6 +17,8 @@ import com.szymonfluder.shop.dto.OrderItemDTO;
 import com.szymonfluder.shop.util.SellerDetails;
 
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.util.List;
 
@@ -77,7 +79,7 @@ public class InvoiceGenerator {
         document.add(sellerAndCustomerInfoTableHeader.setMarginBottom(12f));
 
         Table sellerData = createInfoTable("Company", SellerDetails.COMPANY_NAME, "Address", SellerDetails.COMPANY_ADDRESS);
-        Table customerData = createInfoTable("Name", invoiceDTO.getUserName(), "Address", invoiceDTO.getUserAddress());
+        Table customerData = createInfoTable("Name", invoiceDTO.getUsername(), "Address", invoiceDTO.getAddress());
 
         Table sellerAndBuyerInfoTableContent = new Table(TWO_COLUMN_WIDTH);
         sellerAndBuyerInfoTableContent.addCell(new Cell().add(sellerData).setBorder(Border.NO_BORDER));
@@ -108,7 +110,7 @@ public class InvoiceGenerator {
 
         for (int i = 0; i < orderItemDTOList.size(); i++) {
             OrderItemDTO orderItem = orderItemDTOList.get(i);
-            double total = orderItem.getQuantity() * orderItem.getPriceAtPurchase();
+            BigDecimal total = orderItem.getPriceAtPurchase().multiply(BigDecimal.valueOf(orderItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
 
             soldItemsTableContent.addCell(createCentredCell(String.valueOf(i+1)));
             soldItemsTableContent.addCell(createLeftAlignedCell(orderItem.getProductName()));

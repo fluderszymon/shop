@@ -8,6 +8,8 @@ import com.szymonfluder.shop.mapper.OrderItemMapper;
 import com.szymonfluder.shop.mapper.OrderItemMapperImpl;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class OrderItemMapperTests {
@@ -17,7 +19,7 @@ public class OrderItemMapperTests {
     private final int PRODUCT_ID = 1;
     private final String PRODUCT_NAME = "Test Product";
     private final int QUANTITY = 10;
-    private final double PRICE_AT_PURCHASE = 10.00;
+    private final BigDecimal PRICE_AT_PURCHASE = BigDecimal.valueOf(10.00);
     
     private final OrderItemMapper orderItemMapper = new OrderItemMapperImpl();
 
@@ -36,7 +38,7 @@ public class OrderItemMapperTests {
     }
 
     @Test
-    void orderItemToOrderItemDTO_shouldMapOrderItemToOrderItemDTO() {
+    void orderItemToOrderItemDTO_shouldMapOrderItemToOrderItemDTO_whenValidDataProvided() {
         OrderItem givenOrderItem = createOrderItem();
         OrderItemDTO expectedOrderItemDTO = createOrderItemDTO();
         OrderItemDTO mappedOrderItemDTO = orderItemMapper.orderItemToOrderItemDTO(givenOrderItem);
@@ -45,7 +47,7 @@ public class OrderItemMapperTests {
     }
 
     @Test
-    void orderItemDTOToOrderItem_shouldMapOrderItemDTOToOrderItem() {
+    void orderItemDTOToOrderItem_shouldMapOrderItemDTOToOrderItem_whenValidDataProvided() {
         OrderItemDTO givenOrderItemDTO = createOrderItemDTO();
         OrderItem expectedOrderItem = createOrderItem();
         OrderItem mappedOrderItem = orderItemMapper.orderItemDTOToOrderItem(givenOrderItemDTO);

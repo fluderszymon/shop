@@ -4,12 +4,9 @@ import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.entity.CartItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel="spring")
 public interface CartItemMapper {
-
-    CartItemMapper INSTANCE = Mappers.getMapper(CartItemMapper.class);
 
     @Mapping(source="cartId", target="cart.cartId")
     @Mapping(source="productId", target="product.productId")

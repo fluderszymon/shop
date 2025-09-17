@@ -20,6 +20,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -56,8 +58,8 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void getAllProducts_shouldReturnAllProducts() throws Exception {
-        List<ProductDTO> products = List.of(new ProductDTO(1, "Product 1", "Description 1", 19.99, 50));
+    void getAllProducts_shouldReturnAllProducts_whenProductsExist() throws Exception {
+        List<ProductDTO> products = List.of(new ProductDTO(1, "Product 1", "Description 1", BigDecimal.valueOf(19.99).setScale(2, RoundingMode.HALF_UP), 50));
         when(productService.getAllProducts()).thenReturn(products);
 
         mockMvc.perform(get("/products")
@@ -71,7 +73,7 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void getAllProducts_shouldReturnEmptyList() throws Exception {
+    void getAllProducts_shouldReturnEmptyList_whenNoProductsExist() throws Exception {
         when(productService.getAllProducts()).thenReturn(List.of());
 
         mockMvc.perform(get("/products")
@@ -84,8 +86,8 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void getProductById_shouldReturnProduct() throws Exception {
-        ProductDTO productDTO = new ProductDTO(1, "Test Product", "Test Description", 29.99, 100);
+    void getProductById_shouldReturnProduct_whenProductExists() throws Exception {
+        ProductDTO productDTO = new ProductDTO(1, "Test Product", "Test Description", BigDecimal.valueOf(29.99).setScale(2, RoundingMode.HALF_UP), 100);
         when(productService.getProductById(1)).thenReturn(productDTO);
 
         mockMvc.perform(get("/products/1")
@@ -100,9 +102,9 @@ public class ProductControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void addProduct_shouldReturnCreatedProduct() throws Exception {
-        Product product = new Product(1, "Test Product", "Test Description", 29.99, 100);
-        ProductCreateDTO productCreateDTO = new ProductCreateDTO("Test Product", "Test Description", 29.99, 100);
+    void addProduct_shouldReturnCreatedProduct_whenValidDataProvided() throws Exception {
+        Product product = new Product(1, "Test Product", "Test Description", BigDecimal.valueOf(29.99).setScale(2, RoundingMode.HALF_UP), 100);
+        ProductCreateDTO productCreateDTO = new ProductCreateDTO("Test Product", "Test Description", BigDecimal.valueOf(29.99).setScale(2, RoundingMode.HALF_UP), 100);
         when(productService.addProduct(any(ProductCreateDTO.class))).thenReturn(product);
 
         mockMvc.perform(post("/products")
@@ -119,7 +121,7 @@ public class ProductControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void deleteProductById_shouldDeleteProduct() throws Exception {
+    void deleteProductById_shouldDeleteProduct_whenProductExists() throws Exception {
         doNothing().when(productService).deleteProductById(1);
 
         mockMvc.perform(delete("/products/1")
@@ -131,8 +133,8 @@ public class ProductControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void updateProduct_shouldReturnUpdatedProduct() throws Exception {
-        Product updatedProduct = new Product(1, "Updated Product", "Updated Description", 39.99, 150);
+    void updateProduct_shouldReturnUpdatedProduct_whenValidDataProvided() throws Exception {
+        Product updatedProduct = new Product(1, "Updated Product", "Updated Description", BigDecimal.valueOf(39.99).setScale(2, RoundingMode.HALF_UP), 150);
         when(productService.updateProduct(any(Product.class))).thenReturn(updatedProduct);
 
         mockMvc.perform(put("/products")
@@ -148,14 +150,14 @@ public class ProductControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void getProductById_shouldHandleInvalidIdFormat() throws Exception {
+    void getProductById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(get("/products/invalid")
                 .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void deleteProductById_shouldHandleInvalidIdFormat() throws Exception {
+    void deleteProductById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(delete("/products/invalid")
                 .header("Authorization", AUTH_HEADER))
                 .andExpect(status().isBadRequest());

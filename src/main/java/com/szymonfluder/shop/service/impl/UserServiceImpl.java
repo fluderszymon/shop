@@ -6,6 +6,7 @@ import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.entity.Cart;
 import com.szymonfluder.shop.exception.UsernameTakenException;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
 import com.szymonfluder.shop.security.JWTService;
@@ -18,8 +19,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -49,17 +50,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getUserByUsername(String username) {
-        return userRepository.findUserDTOByUsername(username);
+        UserDTO userDTO = userRepository.findUserDTOByUsername(username);
+        if (userDTO == null) {
+            throw new EntityNotFoundException("User", username);
+        }
+        return userDTO;
     }
 
     @Override
     public UserDTO getUserById(int userId) {
-        return userRepository.findUserDTOById(userId);
+        UserDTO userDTO = userRepository.findUserDTOById(userId);
+        if (userDTO == null) {
+            throw new EntityNotFoundException("User", userId);
+        }
+        return userDTO;
     }
 
     @Override
-    public double getUserBalance(int userId) {
+    public BigDecimal getUserBalance(int userId) {
         UserDTO userDTO = userRepository.findUserDTOById(userId);
+        if (userDTO == null) {
+            throw new EntityNotFoundException("User", userId);
+        }
         return userDTO.getBalance();
     }
 
@@ -82,23 +94,24 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
-        Optional<User> tempUser = userRepository.findById(user.getUserId());
+        userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User", user.getUserId()));
+        
         User updatedUser = new User();
-        if (tempUser.isPresent()) {
-            updatedUser.setUserId(user.getUserId());
-            updatedUser.setUsername(user.getUsername());
-            updatedUser.setEmail(user.getEmail());
-            updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-            updatedUser.setRole(user.getRole());
-            updatedUser.setAddress(user.getAddress());
-            updatedUser.setBalance(user.getBalance());
-        }
+        updatedUser.setUserId(user.getUserId());
+        updatedUser.setUsername(user.getUsername());
+        updatedUser.setEmail(user.getEmail());
+        updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        updatedUser.setRole(user.getRole());
+        updatedUser.setAddress(user.getAddress());
+        updatedUser.setBalance(user.getBalance());
+        
         return userRepository.save(updatedUser);
     }
 
     @Override
-    public void updateUserBalance(int userId, double newBalance) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public void updateUserBalance(int userId, BigDecimal newBalance) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User", userId));
         user.setBalance(newBalance);
         userRepository.save(user);
     }
@@ -106,15 +119,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void register(UserRegisterDTO userRegisterDTO) throws UsernameTakenException {
         if (userRepository.findUserDTOByUsername(userRegisterDTO.getUsername()) == null) {
-            User userToAdd = userMapper.userRegisterDTOToUser(userRegisterDTO);
-            userToAdd.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
-            userToAdd.setRole("USER");
-            User savedUser = userRepository.save(userToAdd);
-
-            Cart cart = new Cart();
-            cart.setUser(savedUser);
-            cartRepository.save(cart);
-
+            addUser(userRegisterDTO);
         } else {
             throw new UsernameTakenException(userRegisterDTO.getUsername());
         }

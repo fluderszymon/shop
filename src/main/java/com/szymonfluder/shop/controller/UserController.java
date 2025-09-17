@@ -5,6 +5,8 @@ import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.service.UserService;
+import com.szymonfluder.shop.validation.ValidUsername;
+
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -31,7 +33,7 @@ public class UserController {
 
     @GetMapping("/{username}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public UserDTO getUserByUsername(@PathVariable String username) {
+    public UserDTO getUserByUsername(@ValidUsername @PathVariable String username) {
         return userService.getUserByUsername(username);
     }
 
@@ -49,7 +51,7 @@ public class UserController {
 
     @PutMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         return userService.updateUser(user);
     }
 

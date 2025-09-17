@@ -3,6 +3,7 @@ package com.szymonfluder.shop.service;
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface CartService {
@@ -20,7 +21,7 @@ public interface CartService {
     void deleteCartItemById(int cartItemId);
     CartItemDTO updateCartItem(CartItemDTO cartItemDTO);
 
-    double getCartTotal(int cartId);
+    BigDecimal getCartTotal(int cartId);
 
     CartDTO getCartDTOForCurrentUser();
     CartItemDTO getCartItemDTOForCurrentUserByCartItemId(int cartItemId);
@@ -29,5 +30,5 @@ public interface CartService {
     void deleteCartItemFromCartForCurrentUser(int cartItemId);
     CartItemDTO updateCartItemInCartForCurrentUser(CartItemDTO cartItemDTO);
 
-    double getCartTotalForCurrentUser();
+    BigDecimal getCartTotalForCurrentUser();
 }

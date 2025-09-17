@@ -1,12 +1,11 @@
 package com.szymonfluder.shop.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -16,6 +15,7 @@ import java.util.List;
 @Entity
 @Table(name="orders")
 public class Order {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="order_id")
@@ -28,12 +28,10 @@ public class Order {
     @OneToMany(mappedBy = "order")
     private List<OrderItem> orderItems;
 
-    @NotNull
-    @Min(0)
-    @Column(name="total_price")
-    private double totalPrice;
-
-    @NotNull
+    @Column(name="total_price", precision = 10, scale = 2)
+    private BigDecimal totalPrice;
+    
     @Column(name="order_date")
     private LocalDate orderDate;
+
 }

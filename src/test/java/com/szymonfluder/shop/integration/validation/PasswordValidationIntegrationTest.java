@@ -47,7 +47,7 @@ class PasswordValidationIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(user)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Validation failed"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
                 .andExpect(jsonPath("$.errors.password").exists());
     }
 
