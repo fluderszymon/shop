@@ -1,18 +1,60 @@
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE order_items;
-TRUNCATE TABLE orders;
-TRUNCATE TABLE cart_items;
-TRUNCATE TABLE carts;
-TRUNCATE TABLE products;
-TRUNCATE TABLE users;
-SET FOREIGN_KEY_CHECKS = 1;
+CREATE TABLE IF NOT EXISTS users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role ENUM('USER', 'ADMIN') NOT NULL,
+    address VARCHAR(255),
+    balance DOUBLE DEFAULT 0.00
+);
+
+CREATE TABLE IF NOT EXISTS products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DOUBLE NOT NULL,
+    stock INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS carts (
+    cart_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS cart_items (
+    cart_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    cart_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    FOREIGN KEY (cart_id) REFERENCES carts(cart_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+CREATE TABLE IF NOT EXISTS orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_price DOUBLE NOT NULL,
+    order_date DATE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS order_items (
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price_at_purchase DOUBLE NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
 
 INSERT INTO users (username, email, password, role, address, balance) VALUES
-('admin', 'admin@shop.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8Kz2', 'ADMIN', '123 Admin Street, Admin City', 10000.00),
-('john_doe', 'john@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8Kz2', 'USER', '456 Main Street, New York', 500.00),
-('jane_smith', 'jane@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8Kz2', 'USER', '789 Oak Avenue, Los Angeles', 750.00),
-('bob_wilson', 'bob@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8Kz2', 'USER', '321 Pine Road, Chicago', 300.00),
-('alice_brown', 'alice@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj4J/8Kz8Kz2', 'USER', '654 Elm Street, Houston', 1200.00);
+('admin', 'admin@shop.com', '$2a$12$k42PXoiZ.XKnEpXyzeY9cOPwNnVyjb16xQwRZOAbCEoXQlK05Jiom', 'ADMIN', '123 Admin Street, Admin City', 10000.00),
+('john_doe', 'john@example.com', '$2a$12$WCUskLcjWsUX4fMDz74zuuLWYRa29/IqGRpB/7Ft4B.Jv8krPmIai', 'USER', '456 Main Street, New York', 500.00),
+('jane_smith', 'jane@example.com', '$2a$12$7iB5A3lvJ3rhnCh.t7tu/uAGk7vdGWO6Y4ciUdx8bltbF9lUb0.wy', 'USER', '789 Oak Avenue, Los Angeles', 750.00),
+('bob_wilson', 'bob@example.com', '$2a$12$QGki6m2npLQ.0vyO17gObefRA70LsO8Ce/myNrDkzdumg0AGpXYvm', 'USER', '321 Pine Road, Chicago', 300.00),
+('alice_brown', 'alice@example.com', '$$2a$12$Y9LjbDhaDFsF2/WemP1Bnu8ix5WCXg7INo09u5CpfqLA.hkp/pQC2', 'USER', '654 Elm Street, Houston', 1200.00);
 
 INSERT INTO products (name, description, price, stock) VALUES
 ('Laptop Pro 15"', 'High-performance laptop with 16GB RAM and 512GB SSD', 1299.99, 25),
@@ -27,6 +69,7 @@ INSERT INTO products (name, description, price, stock) VALUES
 ('Laptop Stand', 'Aluminum laptop stand with adjustable height', 24.99, 120);
 
 INSERT INTO carts (user_id) VALUES
+(1),
 (2),
 (3),
 (4),
@@ -42,9 +85,12 @@ INSERT INTO cart_items (cart_id, product_id, quantity) VALUES
 (3, 7, 1),
 (4, 8, 1),
 (4, 9, 1),
-(4, 10, 1);
+(4, 10, 1),
+(5, 1, 1),
+(5, 4, 1);
 
 INSERT INTO orders (user_id, total_price, order_date) VALUES
+(1, 1459.97, '2024-01-15'),
 (2, 1459.97, '2024-01-15'),
 (3, 479.98, '2024-01-16'),
 (4, 199.98, '2024-01-17'),

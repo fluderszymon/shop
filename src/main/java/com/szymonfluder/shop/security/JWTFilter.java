@@ -33,18 +33,25 @@ public class JWTFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        try {
-            String token = jwtService.extractTokenFromHeader(request);
-            String username = jwtService.extractUsername(token);
-            
-            if (shouldAuthenticate(username)) {
-                authenticateUser(token, username, request);
+        if (shouldProcessRequest(request)) {
+            try {
+                String token = jwtService.extractTokenFromHeader(request);
+                String username = jwtService.extractUsername(token);
+                
+                if (shouldAuthenticate(username)) {
+                    authenticateUser(token, username, request);
+                }
+            } catch (IllegalArgumentException e) {
+                logger.error("Error processing JWT authentication", e);
             }
-        } catch (IllegalArgumentException e) {
-            logger.error("Error processing JWT authentication", e);
         }
         
         filterChain.doFilter(request, response);
+    }
+
+    private boolean shouldProcessRequest(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return !path.equals("/users/login") && !path.equals("/users/register");
     }
 
     private boolean shouldAuthenticate(String username) {
