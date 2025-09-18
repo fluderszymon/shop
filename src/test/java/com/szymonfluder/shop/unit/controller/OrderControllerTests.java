@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -221,7 +222,7 @@ public class OrderControllerTests extends AbstractControllerTest {
     @WithMockUser(authorities = {"USER"})
     void getOrderItemsInMyOrder_shouldThrowAccessDeniedException_whenUserDoesNotOwnOrder() throws Exception {
         when(orderService.getOrderItemsInOrderByOrderIdForCurrentUser(999))
-                .thenThrow(new com.szymonfluder.shop.exception.OrderAccessDeniedException("You are not allowed to access this order"));
+                .thenThrow(new AccessDeniedException("You are not allowed to access order with ID: " + 999));
 
         mockMvc.perform(get("/orders/my-orders/999")
                 .header("Authorization", AUTH_HEADER))

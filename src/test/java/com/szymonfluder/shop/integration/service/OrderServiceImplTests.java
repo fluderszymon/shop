@@ -6,6 +6,7 @@ import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.exception.EntityNotFoundException;
+import com.szymonfluder.shop.exception.InsufficientBalanceException;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.CartItemMapperImpl;
 import com.szymonfluder.shop.mapper.CartMapperImpl;
@@ -22,6 +23,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 import java.math.BigDecimal;
@@ -29,6 +31,9 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.security.access.AccessDeniedException;
+import com.szymonfluder.shop.exception.EmptyCartException;
+import com.szymonfluder.shop.exception.OutOfStockException;
 
 @DataJpaTest
 @Import({OrderServiceImpl.class, OrderMapperImpl.class, OrderItemMapperImpl.class,
@@ -78,26 +83,26 @@ public class OrderServiceImplTests extends AbstractServiceTest {
 
         assertThat(orderService.getOrderById(USER_ID)).isNotNull();
         assertThat(orderService.getAllOrderItemsByOrderId(USER_ID)).isNotNull();
-        assertThat(userService.getUserBalance(USER_ID)).isEqualTo(BigDecimal.valueOf(0.00).setScale(2));
+        assertThat(userService.getUserBalance(USER_ID)).isEqualTo(BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP));
         assertThat(cartService.getAllCartItemsByCartId(USER_ID)).isEqualTo(List.of());
     }
 
     @Test
     void checkout_shouldThrowEmptyCartException_whenCartIsEmpty() {
         setupEmptyCartScenario();
-        assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Cart is empty");
+        assertThrows(EmptyCartException.class, () -> orderService.checkout());
     }
 
     @Test
     void checkout_shouldThrowInsufficientBalanceException_whenBalanceIsInsufficient() {
         setupInsufficientBalanceScenario();
-        assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Insufficient balance");
+        assertThrows(InsufficientBalanceException.class, () -> orderService.checkout());
     }
 
     @Test
     void checkout_shouldThrowOutOfStockException_whenStockIsInsufficient() {
         setupCartWithNotEnoughStockInProducts();
-        assertRuntimeExceptionWithMessage(() -> orderService.checkout(), "Not enough products in stock");
+        assertThrows(OutOfStockException.class, () -> orderService.checkout());
     }
 
     @Test
@@ -175,8 +180,7 @@ public class OrderServiceImplTests extends AbstractServiceTest {
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, EMAIL, PASSWORD, ADDRESS));
         
         authenticateUser(OTHER_USERNAME);
-        assertOrderAccessDeniedException(() -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(USER_ID)
-        );
+        assertThrows(AccessDeniedException.class, () -> orderService.getOrderItemsInOrderByOrderIdForCurrentUser(USER_ID));
     }
 
     @Test
@@ -194,7 +198,6 @@ public class OrderServiceImplTests extends AbstractServiceTest {
         userService.addUser(new UserRegisterDTO(OTHER_USERNAME, OTHER_EMAIL, PASSWORD, ADDRESS));
         authenticateUser(OTHER_USERNAME);
 
-        assertOrderAccessDeniedException(() -> orderService.validateOrderOwnership(USER_ID)
-        );
+        assertThrows(AccessDeniedException.class, () -> orderService.validateOrderOwnership(USER_ID));
     }
 }

@@ -8,7 +8,4 @@ public class InsufficientBalanceException extends RuntimeException {
         super("Insufficient balance. Current: " + currentBalance + ", Required: " + requiredAmount);
     }
 
-    public InsufficientBalanceException(String message) {
-        super(message);
-    }
 }

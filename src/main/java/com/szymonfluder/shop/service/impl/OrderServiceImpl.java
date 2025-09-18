@@ -15,7 +15,7 @@ import com.szymonfluder.shop.service.OrderService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.szymonfluder.shop.exception.OrderAccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.exception.EmptyCartException;
 import com.szymonfluder.shop.exception.OutOfStockException;
@@ -119,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
 
     private void validateUserBalance(BigDecimal userBalance, BigDecimal cartTotal) {
         if (cartTotal.compareTo(userBalance) > 0) {
-            throw new InsufficientBalanceException("Insufficient balance");
+            throw new InsufficientBalanceException(userBalance, cartTotal);
         }
     }
 
@@ -237,7 +237,7 @@ public class OrderServiceImpl implements OrderService {
                 .anyMatch(order -> order.getOrderId() == orderId);
                 
         if (!isOwner) {
-            throw new OrderAccessDeniedException("You are not allowed to access this order");
+            throw new AccessDeniedException("You are not allowed to access order with ID: " + orderId);
         }
     }
 }

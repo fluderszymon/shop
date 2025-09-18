@@ -12,16 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import org.junit.jupiter.api.function.Executable;
-import com.szymonfluder.shop.exception.OrderAccessDeniedException;
-import com.szymonfluder.shop.exception.CartAccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -124,22 +119,5 @@ public abstract class AbstractServiceTest {
 
     protected OrderItemDTO getOrderItemDTOMock() {
         return new OrderItemDTO(ORDER_ITEM_ID, ORDER_ID, DEFAULT_QUANTITY, PRODUCT_NAME, PRODUCT_ID, PRODUCT_PRICE);
-    }
-
-    protected void assertRuntimeExceptionWithMessage(Executable executable, String expectedMessage) {
-        RuntimeException exception = assertThrows(RuntimeException.class, executable);
-        assertThat(exception.getMessage()).isEqualTo(expectedMessage);
-    }
-
-    protected void assertOrderAccessDeniedException(Executable executable) {
-        OrderAccessDeniedException exception = assertThrows(OrderAccessDeniedException.class, executable);
-        String expectedMassage = "You are not allowed to access this order";
-        assertThat(exception.getMessage()).isEqualTo(expectedMassage);
-    }
-
-    protected void assertCartAccessDeniedException(Executable executable) {
-        CartAccessDeniedException exception = assertThrows(CartAccessDeniedException.class, executable);
-        String expectedMassage = "You are not allowed to access this cart";
-        assertThat(exception.getMessage()).isEqualTo(expectedMassage);
     }
 }

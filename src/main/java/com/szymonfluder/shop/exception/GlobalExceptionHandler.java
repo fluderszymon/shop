@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
@@ -57,9 +56,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientBalanceException.class)
     public ResponseEntity<Map<String, Object>> handleInsufficientBalance(InsufficientBalanceException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(createErrorResponse(
-                    HttpStatus.BAD_REQUEST,
+                    HttpStatus.CONFLICT,
                     "Insufficient Balance",
                     ex.getMessage()
                 ));
@@ -67,9 +66,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(OutOfStockException.class)
     public ResponseEntity<Map<String, Object>> handleOutOfStock(OutOfStockException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(createErrorResponse(
-                    HttpStatus.BAD_REQUEST,
+                    HttpStatus.CONFLICT,
                     "Out of Stock",
                     ex.getMessage()
                 ));
@@ -77,27 +76,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmptyCartException.class)
     public ResponseEntity<Map<String, Object>> handleEmptyCart(EmptyCartException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(createErrorResponse(
-                    HttpStatus.BAD_REQUEST,
+                    HttpStatus.CONFLICT,
                     "Empty Cart",
                     ex.getMessage()
-                ));
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        String message = "Invalid ID format. ID must be a number";
-        
-        if (ex.getName().contains("Id")) {
-            message = "Invalid " + ex.getName() + " format. Must be a number";
-        }
-        
-        return ResponseEntity.badRequest()
-                .body(createErrorResponse(
-                    HttpStatus.BAD_REQUEST,
-                    "Bad Request",
-                    message
                 ));
     }
 
@@ -111,32 +94,12 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(OrderAccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleOrderAccessDenied(OrderAccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(createErrorResponse(
-                    HttpStatus.FORBIDDEN,
-                    "Forbidden",
-                    ex.getMessage()
-                ));
-    }
-
-    @ExceptionHandler(CartAccessDeniedException.class)
-    public ResponseEntity<Map<String, Object>> handleCartAccessDenied(CartAccessDeniedException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(createErrorResponse(
-                    HttpStatus.FORBIDDEN,
-                    "Forbidden",
-                    ex.getMessage()
-                ));
-    }
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(createErrorResponse(
                     HttpStatus.FORBIDDEN,
-                    "Forbidden",
+                    "Access Denied",
                     ex.getMessage()
                 ));
     }

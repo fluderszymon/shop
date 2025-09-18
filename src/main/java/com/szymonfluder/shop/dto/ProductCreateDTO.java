@@ -17,7 +17,8 @@ public class ProductCreateDTO {
     @Size(min = 2, max = 100, message = "Product name must be between 2 and 100 characters")
     private String name;
     
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @NotBlank(message = "Product description is required")
+    @Size(min = 5, max = 255, message = "Description must be between 5 and 255 characters")
     private String description;
     
     @NotNull(message = "Price is required")
@@ -27,6 +28,6 @@ public class ProductCreateDTO {
     @NotNull(message = "Stock is required")
     @Min(value = 0, message = "Stock must be non-negative")
     @Max(value = 999999, message = "Stock must not exceed 999999")
-    private Integer stock;
+    private int stock;
 
 }

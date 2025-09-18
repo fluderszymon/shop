@@ -15,7 +15,7 @@ import com.szymonfluder.shop.service.CartService;
 import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.szymonfluder.shop.exception.CartAccessDeniedException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -213,7 +213,7 @@ public class CartServiceImpl implements CartService {
                 .orElse(false);
                 
         if (!isOwner) {
-            throw new CartAccessDeniedException("You are not allowed to access this cart");
+            throw new AccessDeniedException("You are not allowed to access cart with ID: " + cartId);
         }
     }
 }

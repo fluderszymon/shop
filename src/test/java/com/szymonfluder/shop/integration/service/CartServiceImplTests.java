@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.springframework.security.access.AccessDeniedException;
 
 @DataJpaTest
 @Import({CartServiceImpl.class, CartMapperImpl.class,
@@ -259,7 +260,7 @@ public class CartServiceImplTests extends AbstractServiceTest {
         CartItemDTO cartItemDTO = new CartItemDTO(0, (USER_ID + 1), PRODUCT_ID, SMALL_QUANTITY);
 
         authenticateUser(USERNAME);
-        assertCartAccessDeniedException(() -> cartService.addCartItemToCartForCurrentUser(cartItemDTO));
+        assertThrows(AccessDeniedException.class, () -> cartService.addCartItemToCartForCurrentUser(cartItemDTO));
     }   
 
     @Test
