@@ -110,7 +110,7 @@ public class InvoiceGenerator {
 
         for (int i = 0; i < orderItemDTOList.size(); i++) {
             OrderItemDTO orderItem = orderItemDTOList.get(i);
-            BigDecimal total = orderItem.getPriceAtPurchase().multiply(BigDecimal.valueOf(orderItem.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal total = calculateOrderItemTotal(orderItem);
 
             soldItemsTableContent.addCell(createCentredCell(String.valueOf(i+1)));
             soldItemsTableContent.addCell(createLeftAlignedCell(orderItem.getProductName()));
@@ -119,6 +119,12 @@ public class InvoiceGenerator {
             soldItemsTableContent.addCell(createRightAlignedCell(String.valueOf(CURRENCY_FORMAT.format(total))));
         }
         document.add(soldItemsTableContent.setMarginBottom(20f));
+    }
+
+    private BigDecimal calculateOrderItemTotal(OrderItemDTO orderItem) {
+        return orderItem.getPriceAtPurchase()
+                .multiply(BigDecimal.valueOf(orderItem.getQuantity()))
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private void addTotalSummary(Document document, InvoiceDTO invoiceDTO) {

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,7 +27,7 @@ public class GlobalExceptionHandler {
                 ));
         
         return ResponseEntity.badRequest()
-                .body(createValidationErrorResponse(
+                .body(createErrorResponse(
                     HttpStatus.BAD_REQUEST,
                     "Validation Failed",
                     "Request validation failed",
@@ -84,16 +85,6 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.badRequest()
-                .body(createErrorResponse(
-                    HttpStatus.BAD_REQUEST,
-                    "Bad Request",
-                    ex.getMessage()
-                ));
-    }
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -105,21 +96,17 @@ public class GlobalExceptionHandler {
     }
 
     private Map<String, Object> createErrorResponse(HttpStatus status, String error, String message) {
-        return Map.of(
-            "timestamp", LocalDateTime.now(),
-            "status", status.value(),
-            "error", error,
-            "message", message
-        );
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", status.value());
+        response.put("error", error);
+        response.put("message", message);
+        return response;
     }
 
-    private Map<String, Object> createValidationErrorResponse(HttpStatus status, String error, String message, Object errors) {
-        return Map.of(
-            "timestamp", LocalDateTime.now(),
-            "status", status.value(),
-            "error", error,
-            "message", message,
-            "errors", errors
-        );
+    private Map<String, Object> createErrorResponse(HttpStatus status, String error, String message, Object errors) {
+        Map<String, Object> response = createErrorResponse(status, error, message);
+        response.put("errors", errors);
+        return response;
     }
 }

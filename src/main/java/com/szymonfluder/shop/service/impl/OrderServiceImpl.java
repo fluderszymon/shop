@@ -123,8 +123,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    @Transactional
-    protected void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
+    private void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
                                  Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
                                  BigDecimal userBalance, BigDecimal cartTotal) {
 
@@ -137,23 +136,13 @@ public class OrderServiceImpl implements OrderService {
         userService.updateUserBalance(userId, newBalance);
     }
 
-    private OrderDTO createOrder(int userId, int cartId) {
-        OrderDTO orderDTO = new OrderDTO();
-        orderDTO.setUserId(userId);
-        orderDTO.setTotalPrice(cartService.getCartTotal(cartId));
-        orderDTO.setOrderDate(LocalDate.now());
-        Order savedOrder = orderRepository.save(orderMapper.orderDTOToOrder(orderDTO));
-        return orderMapper.orderToOrderDTO(savedOrder);
-    }
-
     private void createOrderItemsFromCartItems(List<CartItemDTO> cartItemDTOList, int orderId) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             addOrderItemFromCartItem(cartItemDTO, orderId);
         }
     }
 
-    @Transactional
-    protected void cleanupCart(int userId, List<CartItemDTO> cartItemDTOList) {
+    private void cleanupCart(int userId, List<CartItemDTO> cartItemDTOList) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             cartService.deleteCartItemById(cartItemDTO.getCartItemId());
         }

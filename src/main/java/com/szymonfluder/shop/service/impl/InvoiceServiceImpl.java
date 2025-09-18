@@ -79,9 +79,13 @@ public class InvoiceServiceImpl implements InvoiceService {
     private BigDecimal calculateTotalPrice(List<OrderItemDTO> orderItemDTOList) {
         BigDecimal total = BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP);
         for (OrderItemDTO orderItemDTO : orderItemDTOList) {
-            BigDecimal itemTotal = orderItemDTO.getPriceAtPurchase().multiply(BigDecimal.valueOf(orderItemDTO.getQuantity())).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal itemTotal = calculateOrderItemTotal(orderItemDTO);
             total = total.add(itemTotal);
         }
         return total;
+    }
+
+    private BigDecimal calculateOrderItemTotal(OrderItemDTO orderItemDTO) {
+        return orderItemDTO.getPriceAtPurchase().multiply(BigDecimal.valueOf(orderItemDTO.getQuantity())).setScale(2, RoundingMode.HALF_UP);
     }
 }

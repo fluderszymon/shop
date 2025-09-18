@@ -57,7 +57,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartDTO getCartById(int cartId) {
-        Cart foundCart = cartRepository.findById(cartId).orElseThrow(() -> new EntityNotFoundException("Cart.class", cartId));
+        Cart foundCart = cartRepository.findById(cartId).orElseThrow(() -> new EntityNotFoundException("Cart", cartId));
         return cartMapper.CartToCartDTO(foundCart);
     }
 
@@ -123,7 +123,7 @@ public class CartServiceImpl implements CartService {
         int productId = cartItemDTO.getProductId();
         int quantityInCart = cartItemDTO.getQuantity();
         int availableStock = productService.getProductById(productId).getStock();
-        if (quantityInCart > availableStock) {
+        if (!productService.isEnough(productId, quantityInCart)) {
             throw new OutOfStockException(productId, availableStock, quantityInCart);
         }
         CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
@@ -143,6 +143,12 @@ public class CartServiceImpl implements CartService {
         
         CartItemDTO updatedCartItemDTO = new CartItemDTO();
         updatedCartItemDTO.setCartItemId(cartItemDTO.getCartItemId());
+        if (!productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
+            int productId = cartItemDTO.getProductId();
+            int quantity = cartItemDTO.getQuantity();
+            int availableStock = productService.getProductById(productId).getStock();
+            throw new OutOfStockException(productId, availableStock, quantity);
+        }
         updatedCartItemDTO.setQuantity(cartItemDTO.getQuantity());
         updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
         updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
