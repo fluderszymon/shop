@@ -10,8 +10,6 @@ public interface CartService {
 
     List<CartDTO> getAllCarts();
     CartDTO getCartById(int cartId);
-    CartDTO addCart(int userId);
-    void deleteCartById(int cartId);
     CartDTO updateCart(CartDTO cartDTO);
 
     List<CartItemDTO> getAllCartItems();

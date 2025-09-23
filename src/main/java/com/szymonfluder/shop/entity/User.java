@@ -2,6 +2,7 @@ package com.szymonfluder.shop.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -9,6 +10,7 @@ import java.math.BigDecimal;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Data
 @Entity
 @Table(name="users")
@@ -31,7 +33,7 @@ public class User {
     @Column(name="role", nullable = false)
     private String role;
 
-    @OneToOne(mappedBy="user")
+    @OneToOne(mappedBy="user", cascade = CascadeType.PERSIST)
     private Cart cart;
 
     @Column(name="address")

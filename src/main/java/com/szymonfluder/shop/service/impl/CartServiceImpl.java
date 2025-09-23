@@ -62,19 +62,6 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    public CartDTO addCart(int userId) {
-        CartDTO cartDTO = new CartDTO();
-        cartDTO.setUserId(userId);
-        Cart savedCart = cartRepository.save(cartMapper.CartDTOToCart(cartDTO));
-        return cartMapper.CartToCartDTO(savedCart);
-    }
-
-    @Override
-    public void deleteCartById(int cartId) {
-        cartRepository.deleteById(cartId);
-    }
-
-    @Override
     public CartDTO updateCart(CartDTO cartDTO) {
         cartRepository.findById(cartDTO.getCartId())
                 .orElseThrow(() -> new EntityNotFoundException("Cart", cartDTO.getCartId()));
@@ -160,7 +147,8 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartDTO getCartDTOForCurrentUser() {
         UserDTO currentUserDTO = userService.getCurrentUserDTO();
-        return cartRepository.findCartDTOByUserId(currentUserDTO.getUserId())
+        return cartRepository.findByUserUserId(currentUserDTO.getUserId())
+                .map(cartMapper::CartToCartDTO)
                 .orElseThrow(() -> new EntityNotFoundException("Cart", currentUserDTO.getUserId()));
     }
 

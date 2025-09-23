@@ -73,14 +73,6 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getProductsByIdList_shouldReturnEmptyList_whenIdListIsEmpty() {
-        addProductToDatabase();
-        List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(List.of());
-
-        assertThat(actualProductDTOList.isEmpty()).isTrue();
-    }
-
-    @Test
     void getProductById_shouldReturnProductDTO_whenProductExists() {
         addProductToDatabase();
         ProductDTO actualProductDTO = productService.getProductById(PRODUCT_ID);

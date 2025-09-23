@@ -16,4 +16,6 @@ public interface CartRepository extends JpaRepository<Cart, Integer> {
             "FROM Cart c " +
             "WHERE c.user.userId=?1")
     Optional<CartDTO> findCartDTOByUserId(int userId);
+
+    Optional<Cart> findByUserUserId(int userId);
 }

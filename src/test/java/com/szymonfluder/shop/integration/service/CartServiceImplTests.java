@@ -37,9 +37,9 @@ public class CartServiceImplTests extends AbstractServiceTest {
     private final int SMALL_QUANTITY = 5;
     private final BigDecimal CART_TOTAL = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
 
-    private CartDTO addCartToDatabase() {
+    private void addCartToDatabase() {
         userService.addUser(getUserRegisterDTO());
-        return cartService.getCartById(CART_ID);
+        cartService.getCartById(CART_ID);
     }
 
     private CartDTO getCartDTOMock() {
@@ -82,17 +82,6 @@ public class CartServiceImplTests extends AbstractServiceTest {
         CartDTO expectedCart = getCartDTOMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
-    }
-
-    @Test
-    void deleteCartById_shouldDeleteCart_whenCartExists() {
-        CartDTO addedCartDTO = addCartToDatabase();
-        int cartId = addedCartDTO.getCartId();
-        assertThat(cartService.getCartById(cartId)).isNotNull();
-
-        cartService.deleteCartById(cartId);
-
-        assertThrows(EntityNotFoundException.class, () -> cartService.getCartById(cartId));
     }
 
     @Test
@@ -216,15 +205,6 @@ public class CartServiceImplTests extends AbstractServiceTest {
         CartDTO expectedCart = getCartDTOMock();
 
         assertThat(actualCart).isEqualTo(expectedCart);
-    }
-
-    @Test
-    void getCartDTOForCurrentUser_shouldThrowEntityNotFoundException_whenCartNotFound() {
-        addUserToDatabase();
-        cartService.deleteCartById(CART_ID);
-
-        authenticateUser(USERNAME);
-        assertThrows(EntityNotFoundException.class, () -> cartService.getCartDTOForCurrentUser());
     }
 
     @Test
