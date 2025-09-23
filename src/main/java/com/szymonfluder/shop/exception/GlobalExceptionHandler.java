@@ -91,6 +91,16 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(InvalidInvoiceDataException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidInvoiceData(InvalidInvoiceDataException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(createErrorResponse(
+                    HttpStatus.BAD_REQUEST,
+                    "Invalid Invoice Data",
+                    ex.getMessage()
+                ));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)

@@ -14,9 +14,10 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.szymonfluder.shop.dto.InvoiceDTO;
 import com.szymonfluder.shop.dto.OrderItemDTO;
+import com.szymonfluder.shop.exception.InvalidInvoiceDataException;
 import com.szymonfluder.shop.util.SellerDetails;
 
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -36,7 +37,15 @@ public class InvoiceGenerator {
     private static final Border THIN_GRAY_BORDER = new SolidBorder(ColorConstants.GRAY, 0.2f);
     private static final Border DASHED_GRAY_BORDER = new DashedBorder(ColorConstants.GRAY, 0.4f);
 
-    public void generateInvoice(String filePath, InvoiceDTO invoiceDTO) throws FileNotFoundException {
+    public void generateInvoice(String filePath, InvoiceDTO invoiceDTO) throws IOException {
+        if (invoiceDTO == null) {
+            throw new InvalidInvoiceDataException("Invoice data cannot be null");
+        }
+        
+        if (filePath == null || filePath.trim().isEmpty()) {
+            throw new InvalidInvoiceDataException("File path cannot be null or empty");
+        }
+        
         PdfWriter pdfWriter = new PdfWriter(filePath);
         PdfDocument pdfDocument = new PdfDocument(pdfWriter);
         pdfDocument.setDefaultPageSize(PageSize.A4);
