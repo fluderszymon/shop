@@ -107,12 +107,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartItemDTO addCartItem(CartItemDTO cartItemDTO) {
-        int productId = cartItemDTO.getProductId();
-        int quantityInCart = cartItemDTO.getQuantity();
-        int availableStock = productService.getProductById(productId).getStock();
-        if (!productService.isEnough(productId, quantityInCart)) {
-            throw new OutOfStockException(productId, availableStock, quantityInCart);
-        }
+        validateProductAvailability(cartItemDTO);
         CartItem savedCartItem = cartItemRepository.save(cartItemMapper.cartItemDTOToCartItem(cartItemDTO));
         return cartItemMapper.cartItemToCartItemDTO(savedCartItem);
     }
@@ -128,14 +123,9 @@ public class CartServiceImpl implements CartService {
         cartItemRepository.findById(cartItemDTO.getCartItemId())
                 .orElseThrow(() -> new EntityNotFoundException("CartItem", cartItemDTO.getCartItemId()));
         
+        validateProductAvailability(cartItemDTO);
         CartItemDTO updatedCartItemDTO = new CartItemDTO();
         updatedCartItemDTO.setCartItemId(cartItemDTO.getCartItemId());
-        if (!productService.isEnough(cartItemDTO.getProductId(), cartItemDTO.getQuantity())) {
-            int productId = cartItemDTO.getProductId();
-            int quantity = cartItemDTO.getQuantity();
-            int availableStock = productService.getProductById(productId).getStock();
-            throw new OutOfStockException(productId, availableStock, quantity);
-        }
         updatedCartItemDTO.setQuantity(cartItemDTO.getQuantity());
         updatedCartItemDTO.setCartId(cartItemDTO.getCartId());
         updatedCartItemDTO.setProductId(cartItemDTO.getProductId());
@@ -187,6 +177,15 @@ public class CartServiceImpl implements CartService {
     public BigDecimal getCartTotalForCurrentUser() {
         CartDTO myCartDTO = getCartDTOForCurrentUser();
         return getCartTotal(myCartDTO.getCartId());
+    }
+
+    private void validateProductAvailability(CartItemDTO cartItemDTO) {
+        int productId = cartItemDTO.getProductId();
+        int requestedQuantity = cartItemDTO.getQuantity();
+        int availableStock = productService.getProductById(productId).getStock();
+        if (!productService.isEnough(productId, requestedQuantity)) {
+            throw new OutOfStockException(productId, availableStock, requestedQuantity);
+        }
     }
 
     private void validateCartItemOwnership(int cartItemId) {
