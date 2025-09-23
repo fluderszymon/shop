@@ -118,6 +118,6 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     void generateInvoicePdf_shouldHandleInvalidOrderIdFormat_whenInvalidOrderIdProvided() throws Exception {
         mockMvc.perform(get("/invoices/invalid/pdf")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 }

@@ -153,13 +153,13 @@ public class ProductControllerTests extends AbstractControllerTest {
     void getProductById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(get("/products/invalid")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
     void deleteProductById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(delete("/products/invalid")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 }

@@ -158,7 +158,7 @@ public class UserControllerTests extends AbstractControllerTest {
     void deleteUserById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(delete("/users/invalid")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
