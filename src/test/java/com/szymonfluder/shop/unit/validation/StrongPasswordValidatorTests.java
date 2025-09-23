@@ -13,7 +13,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
-class StrongPasswordValidatorTest {
+class StrongPasswordValidatorTests {
 
     private StrongPasswordValidator validator;
     
@@ -36,82 +36,82 @@ class StrongPasswordValidatorTest {
     }
 
     @Test
-    void isValid_shouldReturnTrue_whenPasswordIsStrong() {
+    void isValidPassword_shouldReturnTrue_whenPasswordIsStrong() {
         String strongPassword = "MyStr0ng!Pass";
         boolean result = isValidPassword(strongPassword);
         assertThat(result).isTrue();
     }
 
     @Test
-    void isValid_shouldReturnTrue_whenPasswordHasSpecialChars() {
+    void isValidPassword_shouldReturnTrue_whenPasswordHasSpecialChars() {
         String passwordWithSpecial = "MyStrongPassword0@";
         boolean result = isValidPassword(passwordWithSpecial);
         assertThat(result).isTrue();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordIsTooShort() {
+    void isValidPassword_shouldReturnFalse_whenPasswordIsTooShort() {
         String shortPassword = "My1!";
         boolean result = isValidPassword(shortPassword);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordHasNoUppercase() {
+    void isValidPassword_shouldReturnFalse_whenPasswordHasNoUppercase() {
         String noUppercase = "mystrongpassword0!";
         boolean result = isValidPassword(noUppercase);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordHasNoLowercase() {
+    void isValidPassword_shouldReturnFalse_whenPasswordHasNoLowercase() {
         String noLowercase = "MYSTRONGPASSWORD0!";
         boolean result = isValidPassword(noLowercase);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordHasNoDigit() {
+    void isValidPassword_shouldReturnFalse_whenPasswordHasNoDigit() {
         String noDigit = "MyStrongPassword!";
         boolean result = isValidPassword(noDigit);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordHasNoSpecialCharacter() {
+    void isValidPassword_shouldReturnFalse_whenPasswordHasNoSpecialCharacter() {
         String noSpecial = "MyStrongPassword0";
         boolean result = isValidPassword(noSpecial);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordHasWhitespace() {
+    void isValidPassword_shouldReturnFalse_whenPasswordHasWhitespace() {
         String withWhitespace = "My StrongPassword!0";
         boolean result = isValidPassword(withWhitespace);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordIsNull() {
+    void isValidPassword_shouldReturnFalse_whenPasswordIsNull() {
         boolean result = isValidPassword(null);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordIsEmpty() {
+    void isValidPassword_shouldReturnFalse_whenPasswordIsEmpty() {
         boolean result = isValidPassword("");
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnFalse_whenPasswordTooLong() {
+    void isValidPassword_shouldReturnFalse_whenPasswordTooLong() {
         String tooLong = "A".repeat(21) + "1!";
         boolean result = isValidPassword(tooLong);
         assertThat(result).isFalse();
     }
 
     @Test
-    void isValid_shouldReturnTrue_whenPasswordExactlyMinLength() {
+    void isValidPassword_shouldReturnTrue_whenPasswordExactlyMinLength() {
         String minLength = "MyStro0!";
         boolean result = isValidPassword(minLength);
         assertThat(result).isTrue();

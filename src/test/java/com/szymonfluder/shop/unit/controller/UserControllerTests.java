@@ -175,6 +175,20 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
+    void register_shouldReturn400_whenPasswordValidationFails() throws Exception {
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "weak", "New Address");
+
+        mockMvc.perform(post("/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRegisterDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors.password").exists());
+
+        verify(userService, never()).register(any(UserRegisterDTO.class));
+    }
+
+    @Test
     void login_shouldReturnToken_whenValidCredentialsProvided() throws Exception {
         UserLoginDTO userLoginDTO = new UserLoginDTO("user", "MyPassword1!");
         String expectedToken = "jwt.token.response";
