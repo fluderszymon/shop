@@ -5,6 +5,9 @@ import com.szymonfluder.shop.dto.UserLoginDTO;
 import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.service.UserService;
+import com.szymonfluder.shop.validation.ValidUsername;
+
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,13 +33,13 @@ public class UserController {
 
     @GetMapping("/{username}")
     @PreAuthorize("hasAuthority('ADMIN')")
-    public UserDTO getUserByUsername(@PathVariable String username) {
+    public UserDTO getUserByUsername(@ValidUsername @PathVariable String username) {
         return userService.getUserByUsername(username);
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public User addUser(@RequestBody UserRegisterDTO userRegisterDTO) {
+    public User addUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO) {
         return userService.addUser(userRegisterDTO);
     }
 
@@ -48,17 +51,17 @@ public class UserController {
 
     @PutMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public User updateUser(@RequestBody User user) {
+    public User updateUser(@Valid @RequestBody User user) {
         return userService.updateUser(user);
     }
 
     @PostMapping("/register")
-    public void register(@RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
+    public void register(@Valid @RequestBody UserRegisterDTO userRegisterDTO) throws Exception {
         userService.register(userRegisterDTO);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody UserLoginDTO userLoginDTO) {
+    public String login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
         return userService.verify(userLoginDTO);
     }
 }

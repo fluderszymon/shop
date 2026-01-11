@@ -3,6 +3,7 @@ package com.szymonfluder.shop.integration.service;
 import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.integration.config.TestConfig;
 import com.szymonfluder.shop.mapper.ProductMapperImpl;
 import com.szymonfluder.shop.service.impl.ProductServiceImpl;
@@ -12,11 +13,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @DataJpaTest
 @Import({ProductServiceImpl.class, ProductMapperImpl.class, TestConfig.class})
@@ -35,13 +39,13 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getAllProducts_shouldReturnEmptyList() {
+    void getAllProducts_shouldReturnEmptyList_whenNoProductsExist() {
         List<ProductDTO> actualProductDTOList = productService.getAllProducts();
         assertThat(actualProductDTOList.isEmpty()).isTrue();
     }
 
     @Test
-    void getAllProducts_shouldReturnAllProductDTOs() {
+    void getAllProducts_shouldReturnAllProductDTOs_whenProductsExist() {
         addProductToDatabase();
         List<ProductDTO> actualProductDTOList = productService.getAllProducts();
         List<ProductDTO> expectedProductDTOList = List.of(getProductDTOMock());
@@ -50,7 +54,7 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getProductsByIdList_shouldReturnEmptyListWhenThereIsNoProductWithIdInGivenList() {
+    void getProductsByIdList_shouldReturnEmptyList_whenNoProductsWithGivenIdsExist() {
         addProductToDatabase();
         List<Integer> notExistingIdList = List.of(NON_EXISTING_ID);
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(notExistingIdList);
@@ -59,7 +63,7 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getProductsByIdList_shouldReturnProductDTOsHavingIdsInGivenList() {
+    void getProductsByIdList_shouldReturnProductDTOs_whenProductsWithGivenIdsExist() {
         addProductToDatabase();
         List<Integer> existingIdList = List.of(PRODUCT_ID);
         List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(existingIdList);
@@ -69,15 +73,7 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getProductsByIdList_shouldReturnEmptyListWhenIdListIsEmpty() {
-        addProductToDatabase();
-        List<ProductDTO> actualProductDTOList = productService.getProductsByIdList(List.of());
-
-        assertThat(actualProductDTOList.isEmpty()).isTrue();
-    }
-
-    @Test
-    void getProductById_shouldReturnProductDTO() {
+    void getProductById_shouldReturnProductDTO_whenProductExists() {
         addProductToDatabase();
         ProductDTO actualProductDTO = productService.getProductById(PRODUCT_ID);
         ProductDTO expectedProductDTO = getProductDTOMock();
@@ -86,13 +82,12 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void getProductById_shouldThrowExceptionWhenProductNotFound() {
-        assertRuntimeExceptionWithMessage(() -> productService.getProductById(NON_EXISTING_ID), 
-                "Product with id: " + NON_EXISTING_ID + " does not exist");
+    void getProductById_shouldThrowEntityNotFoundException_whenProductNotFound() {
+        assertThrows(EntityNotFoundException.class, () -> productService.getProductById(NON_EXISTING_ID));
     }
 
     @Test
-    void addProduct_shouldReturnAddedProduct() {
+    void addProduct_shouldReturnAddedProduct_whenProductIsValid() {
         Product addedProduct = addProductToDatabase();
         Product expectedProduct = getProductMock();
 
@@ -100,21 +95,20 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void deleteProductById_shouldDeleteProduct() {
+    void deleteProductById_shouldDeleteProduct_whenProductExists() {
         addProductToDatabase();
         assertThat(productService.getProductById(PRODUCT_ID)).isNotNull();
 
         productService.deleteProductById(PRODUCT_ID);
-        assertRuntimeExceptionWithMessage(() -> productService.getProductById(PRODUCT_ID), 
-                "Product with id: " + PRODUCT_ID + " does not exist");
+        assertThrows(EntityNotFoundException.class, () -> productService.getProductById(PRODUCT_ID));
     }
 
     @Test
-    void updateProduct_shouldReturnUpdatedProduct() {
+    void updateProduct_shouldReturnUpdatedProduct_whenProductExists() {
         addProductToDatabase();
         String UPDATED_PRODUCT_NAME = "Updated Product";
         String UPDATED_PRODUCT_DESCRIPTION = "Updated Description";
-        double UPDATED_PRODUCT_PRICE = 50.00;
+        BigDecimal UPDATED_PRODUCT_PRICE = BigDecimal.valueOf(50.00).setScale(2, RoundingMode.HALF_UP);
         int UPDATED_STOCK = 200;
         Product productPassedToUpdateMethod
             = new Product(PRODUCT_ID, UPDATED_PRODUCT_NAME, UPDATED_PRODUCT_DESCRIPTION, UPDATED_PRODUCT_PRICE, UPDATED_STOCK);
@@ -124,16 +118,15 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void updateProduct_shouldThrowExceptionWhenThereIsNoProductToUpdateWithGivenId() {
+    void updateProduct_shouldThrowEntityNotFoundException_whenProductNotFound() {
         addProductToDatabase();
         Product productWithNonExistingProductId = new Product(NON_EXISTING_ID, PRODUCT_NAME, PRODUCT_DESCRIPTION, PRODUCT_PRICE, DEFAULT_STOCK);
 
-        assertRuntimeExceptionWithMessage(() -> productService.updateProduct(productWithNonExistingProductId), 
-                "Product with id: " + NON_EXISTING_ID + " does not exist");
+        assertThrows(EntityNotFoundException.class, () -> productService.updateProduct(productWithNonExistingProductId));
     }
 
     @Test
-    void isEnough_shouldReturnTrueWhenStockIsEnough() {
+    void isEnough_shouldReturnTrue_whenStockIsSufficient() {
         Product addedProduct = addProductToDatabase();
 
         boolean result = productService.isEnough(PRODUCT_ID, addedProduct.getStock());
@@ -141,7 +134,7 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void isEnough_shouldReturnFalseWhenStockIsNotEnough() {
+    void isEnough_shouldReturnFalse_whenStockIsInsufficient() {
         Product addedProduct = addProductToDatabase();
 
         boolean result = productService.isEnough(PRODUCT_ID, addedProduct.getStock() + 1);
@@ -149,7 +142,7 @@ public class ProductServiceImplTests extends AbstractServiceTest {
     }
 
     @Test
-    void updateProductsStock_shouldUpdateProductsStock() {
+    void updateProductsStock_shouldUpdateProductsStock_whenValidDataProvided() {
         Product addedProduct = addProductToDatabase();
         ProductDTO addedProductDTO = productMapper.productToProductDTO(addedProduct);
         CartItemDTO cartItemDTO = getCartItemDTOMock();

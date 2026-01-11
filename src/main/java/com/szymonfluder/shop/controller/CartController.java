@@ -3,10 +3,13 @@ package com.szymonfluder.shop.controller;
 import com.szymonfluder.shop.dto.CartDTO;
 import com.szymonfluder.shop.dto.CartItemDTO;
 import com.szymonfluder.shop.service.CartService;
+
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -64,13 +67,13 @@ public class CartController {
 
     @PostMapping("/my-cart/items")
     @PreAuthorize("hasAuthority('USER')")
-    public CartItemDTO addCartItemToMyCart(@RequestBody CartItemDTO cartItemDTO) {
+    public CartItemDTO addCartItemToMyCart(@Valid @RequestBody CartItemDTO cartItemDTO) {
         return cartService.addCartItemToCartForCurrentUser(cartItemDTO);
     }
 
     @PutMapping("/my-cart/items")
     @PreAuthorize("hasAuthority('USER')")
-    public CartItemDTO updateCartItemInMyCart(@RequestBody CartItemDTO cartItemDTO) {
+    public CartItemDTO updateCartItemInMyCart(@Valid @RequestBody CartItemDTO cartItemDTO) {
         return cartService.updateCartItemInCartForCurrentUser(cartItemDTO);
     }
 
@@ -82,7 +85,7 @@ public class CartController {
 
     @GetMapping("/my-cart/total")
     @PreAuthorize("hasAuthority('USER')")
-    public double getMyCartTotal() {
+    public BigDecimal getMyCartTotal() {
         return cartService.getCartTotalForCurrentUser();
     }
 }

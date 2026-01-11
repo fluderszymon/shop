@@ -16,6 +16,7 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "shopuser", "-pshoppass"]
       timeout: 20s
       retries: 10
+      start_period: 30s
     networks:
       - shop-network
 
@@ -26,6 +27,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/shop
       SPRING_DATASOURCE_USERNAME: shopuser
       SPRING_DATASOURCE_PASSWORD: shoppass
+      TZ: Europe/Warsaw
     ports:
       - "8080:8080"
     depends_on:

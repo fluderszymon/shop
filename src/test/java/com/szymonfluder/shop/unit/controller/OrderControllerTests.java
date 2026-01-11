@@ -14,10 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -52,8 +54,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getAllOrders_shouldReturnAllOrders() throws Exception {
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)));
+    void getAllOrders_shouldReturnAllOrders_whenOrdersExist() throws Exception {
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, BigDecimal.valueOf(99.99), LocalDate.of(2024, 1, 15)));
         when(orderService.getAllOrders()).thenReturn(orders);
 
         mockMvc.perform(get("/orders")
@@ -68,7 +70,7 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getAllOrders_shouldReturnEmptyList() throws Exception {
+    void getAllOrders_shouldReturnEmptyList_whenNoOrdersExist() throws Exception {
         when(orderService.getAllOrders()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders")
@@ -82,8 +84,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getOrderById_shouldReturnOrder() throws Exception {
-        OrderDTO orderDTO = new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15));
+    void getOrderById_shouldReturnOrder_whenOrderExists() throws Exception {
+        OrderDTO orderDTO = new OrderDTO(1, 1, BigDecimal.valueOf(99.99), LocalDate.of(2024, 1, 15));
         when(orderService.getOrderById(1)).thenReturn(orderDTO);
 
         mockMvc.perform(get("/orders/1")
@@ -98,8 +100,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getAllOrderItems_shouldReturnAllOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 2, 1, "Product", 2, 29.99));
+    void getAllOrderItems_shouldReturnAllOrderItems_whenOrderItemsExist() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 2, 1, "Product", 2, BigDecimal.valueOf(29.99)));
         when(orderService.getAllOrderItems()).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/order-items")
@@ -114,7 +116,7 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getAllOrderItems_shouldReturnEmptyList() throws Exception {
+    void getAllOrderItems_shouldReturnEmptyList_whenNoOrderItemsExist() throws Exception {
         when(orderService.getAllOrderItems()).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/order-items")
@@ -128,8 +130,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getOrderItemsInOrderByOrderId_shouldReturnOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
+    void getOrderItemsInOrderByOrderId_shouldReturnOrderItems_whenOrderHasItems() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, BigDecimal.valueOf(19.99)));
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/1/order-items")
@@ -144,7 +146,7 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"ADMIN"})
-    void getOrderItemsInOrderByOrderId_shouldReturnEmptyList() throws Exception {
+    void getOrderItemsInOrderByOrderId_shouldReturnEmptyList_whenOrderHasNoItems() throws Exception {
         when(orderService.getAllOrderItemsByOrderId(1)).thenReturn(List.of());
 
         mockMvc.perform(get("/orders/1/order-items")
@@ -158,7 +160,7 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"})
-    void checkout_shouldProcessCheckout() throws Exception {
+    void checkout_shouldProcessCheckout_whenUserIsAuthenticated() throws Exception {
         doNothing().when(orderService).checkout();
 
         mockMvc.perform(post("/orders/checkout")
@@ -170,8 +172,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"})
-    void getMyOrders_shouldReturnUserOrders() throws Exception {
-        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, 99.99, LocalDate.of(2024, 1, 15)));
+    void getMyOrders_shouldReturnUserOrders_whenUserIsAuthenticated() throws Exception {
+        List<OrderDTO> orders = List.of(new OrderDTO(1, 1, BigDecimal.valueOf(99.99), LocalDate.of(2024, 1, 15)));
         when(orderService.getOrdersForCurrentUser()).thenReturn(orders);
 
         mockMvc.perform(get("/orders/my-orders")
@@ -186,8 +188,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"})
-    void getOrderItemsInMyOrder_shouldReturnOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
+    void getOrderItemsInMyOrder_shouldReturnOrderItems_whenUserOwnsOrder() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, BigDecimal.valueOf(19.99)));
         when(orderService.getOrderItemsInOrderByOrderIdForCurrentUser(1)).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/my-orders/1")
@@ -202,8 +204,8 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"})
-    void getMyOrderItems_shouldReturnUserOrderItems() throws Exception {
-        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 19.99));
+    void getMyOrderItems_shouldReturnUserOrderItems_whenUserIsAuthenticated() throws Exception {
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, BigDecimal.valueOf(19.99)));
         when(orderService.getOrderItemsForCurrentUser()).thenReturn(orderItems);
 
         mockMvc.perform(get("/orders/my-orders/order-items")
@@ -218,9 +220,9 @@ public class OrderControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities = {"USER"})
-    void getOrderItemsInMyOrder_shouldThrowAccessDeniedException() throws Exception {
+    void getOrderItemsInMyOrder_shouldThrowAccessDeniedException_whenUserDoesNotOwnOrder() throws Exception {
         when(orderService.getOrderItemsInOrderByOrderIdForCurrentUser(999))
-                .thenThrow(new org.springframework.security.access.AccessDeniedException("You are not allowed to access this order"));
+                .thenThrow(new AccessDeniedException("You are not allowed to access order with ID: " + 999));
 
         mockMvc.perform(get("/orders/my-orders/999")
                 .header("Authorization", AUTH_HEADER))

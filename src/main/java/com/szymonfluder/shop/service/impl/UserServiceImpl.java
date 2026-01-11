@@ -6,20 +6,22 @@ import com.szymonfluder.shop.dto.UserRegisterDTO;
 import com.szymonfluder.shop.entity.User;
 import com.szymonfluder.shop.entity.Cart;
 import com.szymonfluder.shop.exception.UsernameTakenException;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
 import com.szymonfluder.shop.mapper.UserMapper;
 import com.szymonfluder.shop.repository.UserRepository;
 import com.szymonfluder.shop.security.JWTService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import com.szymonfluder.shop.repository.CartRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -29,50 +31,60 @@ public class UserServiceImpl implements UserService {
     private final JWTService jwtService;
     private final AuthenticationManager authenticationManager;
     private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder(12);
-    private final CartRepository cartRepository;
 
     @Autowired
     public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
-                           JWTService jwtService, AuthenticationManager authenticationManager, 
-                           CartRepository cartRepository) {
+                           JWTService jwtService, AuthenticationManager authenticationManager) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
-        this.cartRepository = cartRepository;
     }
 
     @Override
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAllUserDTO();
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::userToUserDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public UserDTO getUserByUsername(String username) {
-        return userRepository.findUserDTOByUsername(username);
-    }
+        return userRepository.findByUsername(username)
+                .map(userMapper::userToUserDTO)
+                .orElseThrow(() -> new EntityNotFoundException("User", username));
+        }
 
     @Override
     public UserDTO getUserById(int userId) {
-        return userRepository.findUserDTOById(userId);
+        return userRepository.findById(userId)
+                .map(userMapper::userToUserDTO)
+                .orElseThrow(() -> new EntityNotFoundException("User", userId));
     }
 
     @Override
-    public double getUserBalance(int userId) {
-        UserDTO userDTO = userRepository.findUserDTOById(userId);
-        return userDTO.getBalance();
+    public BigDecimal getUserBalance(int userId) {
+        return getUserById(userId).getBalance();
     }
 
     @Override
     public User addUser(UserRegisterDTO userRegisterDTO) {
-        User user = userMapper.userRegisterDTOToUser(userRegisterDTO);
-        user.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
-        user.setRole("USER");
-        User savedUser = userRepository.save(user);
-        Cart cart = new Cart();
-        cart.setUser(savedUser);
-        cartRepository.save(cart);
-        return savedUser;
+        User user = User.builder()
+                .username(userRegisterDTO.getUsername())
+                .email(userRegisterDTO.getEmail())
+                .password(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()))
+                .role("USER")
+                .address(userRegisterDTO.getAddress())
+                .balance(BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP))
+                .build();
+        
+        Cart cart = Cart.builder()
+                .user(user)
+                .build();
+        
+        user.setCart(cart);
+        return userRepository.save(user);
     }
 
     @Override
@@ -82,47 +94,42 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUser(User user) {
-        Optional<User> tempUser = userRepository.findById(user.getUserId());
-        User updatedUser = new User();
-        if (tempUser.isPresent()) {
-            updatedUser.setUserId(user.getUserId());
-            updatedUser.setUsername(user.getUsername());
-            updatedUser.setEmail(user.getEmail());
-            updatedUser.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
-            updatedUser.setRole(user.getRole());
-            updatedUser.setAddress(user.getAddress());
-            updatedUser.setBalance(user.getBalance());
-        }
+        userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User", user.getUserId()));
+        
+        User updatedUser = User.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .password(bCryptPasswordEncoder.encode(user.getPassword()))
+                .role(user.getRole())
+                .address(user.getAddress())
+                .balance(user.getBalance())
+                .build();
+        
         return userRepository.save(updatedUser);
     }
 
     @Override
-    public void updateUserBalance(int userId, double newBalance) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    public void updateUserBalance(int userId, BigDecimal newBalance) {
+        User user = userRepository.findById(userId).
+            orElseThrow(() -> new EntityNotFoundException("User", userId));
         user.setBalance(newBalance);
         userRepository.save(user);
     }
 
     @Override
     public void register(UserRegisterDTO userRegisterDTO) throws UsernameTakenException {
-        if (userRepository.findUserDTOByUsername(userRegisterDTO.getUsername()) == null) {
-            User userToAdd = userMapper.userRegisterDTOToUser(userRegisterDTO);
-            userToAdd.setPassword(bCryptPasswordEncoder.encode(userRegisterDTO.getPassword()));
-            userToAdd.setRole("USER");
-            User savedUser = userRepository.save(userToAdd);
-
-            Cart cart = new Cart();
-            cart.setUser(savedUser);
-            cartRepository.save(cart);
-
-        } else {
-            throw new UsernameTakenException(userRegisterDTO.getUsername());
+        String username = userRegisterDTO.getUsername();
+        if (userExists(username)) {
+            throw new UsernameTakenException(username);
         }
+        addUser(userRegisterDTO);
     }
 
     @Override
     public String verify(UserLoginDTO userLoginDTO) {
-        if (userRepository.findUserDTOByUsername(userLoginDTO.getUsername()) != null) {
+        if (userRepository.findByUsername(userLoginDTO.getUsername()).isPresent()) {
             Authentication auth = authenticationManager.
                     authenticate(new UsernamePasswordAuthenticationToken(
                             userLoginDTO.getUsername(), userLoginDTO.getPassword()));
@@ -136,6 +143,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDTO getCurrentUserDTO() {
         String username = jwtService.getCurrentUsername();
-        return userRepository.findUserDTOByUsername(username);
+        return userRepository.findByUsername(username)
+                .map(userMapper::userToUserDTO)
+                .orElseThrow(() -> new EntityNotFoundException("User", username));
+    }
+
+    private boolean userExists(String username) {
+        return userRepository.findByUsername(username).isPresent();
     }
 }

@@ -12,13 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import org.junit.jupiter.api.function.Executable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -47,15 +45,15 @@ public abstract class AbstractServiceTest {
 
     protected final String OTHER_USERNAME = "OtherUser";
     protected final String OTHER_EMAIL = "other@outlook.com";
-    protected final double SUFFICIENT_BALANCE = 100.00;
+    protected final BigDecimal SUFFICIENT_BALANCE = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
 
     protected final String PRODUCT_NAME = "Product";
     protected final String PRODUCT_DESCRIPTION = "Description";
-    protected final double PRODUCT_PRICE = 10.00;
+    protected final BigDecimal PRODUCT_PRICE = BigDecimal.valueOf(10.00).setScale(2, RoundingMode.HALF_UP);
     protected final int DEFAULT_STOCK = 100;
     protected final int DEFAULT_QUANTITY = 10;
 
-    protected final double ORDER_TOTAL = 100.0;
+    protected final BigDecimal ORDER_TOTAL = BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP);
 
     @Autowired
     protected UserServiceImpl userService;
@@ -121,15 +119,5 @@ public abstract class AbstractServiceTest {
 
     protected OrderItemDTO getOrderItemDTOMock() {
         return new OrderItemDTO(ORDER_ITEM_ID, ORDER_ID, DEFAULT_QUANTITY, PRODUCT_NAME, PRODUCT_ID, PRODUCT_PRICE);
-    }
-
-    protected void assertRuntimeExceptionWithMessage(Executable executable, String expectedMessage) {
-        RuntimeException exception = assertThrows(RuntimeException.class, executable);
-        assertThat(exception.getMessage()).isEqualTo(expectedMessage);
-    }
-
-    protected void assertAccessDeniedException(Executable executable, String expectedMessage) {
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class, executable);
-        assertThat(exception.getMessage()).isEqualTo(expectedMessage);
     }
 }

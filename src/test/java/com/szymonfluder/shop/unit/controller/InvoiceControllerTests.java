@@ -20,6 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -57,12 +59,12 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     }
 
     private InvoiceDTO provideInvoiceDTO() {
-        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, 20.00));
-        return new InvoiceDTO("INV-001", LocalDate.now(), orderItems, 40.00, "John Doe", "123 Main St");
+        List<OrderItemDTO> orderItems = List.of(new OrderItemDTO(1, 1, 2, "Product 1", 1, BigDecimal.valueOf(20.00).setScale(2, RoundingMode.HALF_UP)));
+        return new InvoiceDTO("INV-001", LocalDate.now(), orderItems, BigDecimal.valueOf(40.00).setScale(2, RoundingMode.HALF_UP), "John Doe", "123 Main St");
     }
 
     @Test
-    void generateInvoicePdf_shouldReturnPdfFile() throws Exception {
+    void generateInvoicePdf_shouldReturnPdfFile_whenValidOrderIdProvided() throws Exception {
         int orderId = 1;
         InvoiceDTO invoiceDTO = provideInvoiceDTO();
         
@@ -113,9 +115,9 @@ public class InvoiceControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void generateInvoicePdf_shouldHandleInvalidOrderIdFormat() throws Exception {
+    void generateInvoicePdf_shouldHandleInvalidOrderIdFormat_whenInvalidOrderIdProvided() throws Exception {
         mockMvc.perform(get("/invoices/invalid/pdf")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 }

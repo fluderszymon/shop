@@ -1,5 +1,6 @@
 package com.szymonfluder.shop.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,6 +16,10 @@ import com.szymonfluder.shop.service.ProductService;
 import com.szymonfluder.shop.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
+import com.szymonfluder.shop.exception.EntityNotFoundException;
+import com.szymonfluder.shop.exception.EmptyCartException;
+import com.szymonfluder.shop.exception.OutOfStockException;
+import com.szymonfluder.shop.exception.InsufficientBalanceException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,7 +65,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderDTO getOrderById(int orderId) {
         Order foundOrder = orderRepository.findById(orderId)
-                .orElseThrow(() -> new RuntimeException("Order with given orderId not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Order", orderId));
         return orderMapper.orderToOrderDTO(foundOrder);
     }
 
@@ -89,46 +94,45 @@ public class OrderServiceImpl implements OrderService {
         Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap = mapProductsDTOsToCartItemDTOs(cartItemDTOList);
         validateStockAvailability(productDTOCartItemDTOMap);
 
-        double userBalance = userService.getUserBalance(userId);
-        double cartTotal = cartService.getCartTotal(cartId);
+        BigDecimal userBalance = userService.getUserBalance(userId);
+        BigDecimal cartTotal = cartService.getCartTotal(cartId);
         validateUserBalance(userBalance, cartTotal);
 
         processCheckout(userId, cartId, cartItemDTOList, productDTOCartItemDTOMap, userBalance, cartTotal);
 
-        cleanupCart(cartId, userId, cartItemDTOList);
+        cleanupCart(userId, cartItemDTOList);
     }
 
     private void validateCartNotEmpty(List<CartItemDTO> cartItemDTOList) {
         if (cartItemDTOList.isEmpty()) {
-            throw new RuntimeException("Cart is empty");
+            throw new EmptyCartException("Cart is empty");
         }
     }
 
     private void validateStockAvailability(Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap) {
         for (Map.Entry<ProductDTO, CartItemDTO> mapEntry : productDTOCartItemDTOMap.entrySet()) {
             if (mapEntry.getKey().getStock() < mapEntry.getValue().getQuantity()) {
-                throw new RuntimeException("Not enough products in stock");
+                throw new OutOfStockException("Not enough products in stock");
             }
         }
     }
 
-    private void validateUserBalance(double userBalance, double cartTotal) {
-        if (cartTotal > userBalance) {
-            throw new RuntimeException("Insufficient balance");
+    private void validateUserBalance(BigDecimal userBalance, BigDecimal cartTotal) {
+        if (cartTotal.compareTo(userBalance) > 0) {
+            throw new InsufficientBalanceException(userBalance, cartTotal);
         }
     }
 
-    @Transactional
     private void processCheckout(int userId, int cartId, List<CartItemDTO> cartItemDTOList,
                                  Map<ProductDTO, CartItemDTO> productDTOCartItemDTOMap,
-                                 double userBalance, double cartTotal) {
+                                 BigDecimal userBalance, BigDecimal cartTotal) {
 
         productService.updateProductsStock(productDTOCartItemDTOMap);
 
         OrderDTO orderDTO = createOrder(userId, cartId);
         createOrderItemsFromCartItems(cartItemDTOList, orderDTO.getOrderId());
 
-        double newBalance = userBalance - cartTotal;
+        BigDecimal newBalance = userBalance.subtract(cartTotal);
         userService.updateUserBalance(userId, newBalance);
     }
 
@@ -147,18 +151,17 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    @Transactional
-    private void cleanupCart(int cartId, int userId, List<CartItemDTO> cartItemDTOList) {
+    private void cleanupCart(int userId, List<CartItemDTO> cartItemDTOList) {
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             cartService.deleteCartItemById(cartItemDTO.getCartItemId());
         }
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User", userId));
         user.setCart(null);
     }
 
     private void addOrderItemFromCartItem(CartItemDTO cartItemDTO, int orderId) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("Order not found"));
-        Product product = productRepository.findById(cartItemDTO.getProductId()).orElseThrow(() -> new RuntimeException("Product not found"));
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> new EntityNotFoundException("Order", orderId));
+        Product product = productRepository.findById(cartItemDTO.getProductId()).orElseThrow(() -> new EntityNotFoundException("Product", cartItemDTO.getProductId()));
 
         OrderItem orderItem = new OrderItem();
         orderItem.setOrder(order);
@@ -170,7 +173,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private List<Integer> extractProductIdsFromCartItemDTOList(List<CartItemDTO> cartItemDTOList) {
-        if (cartItemDTOList.isEmpty()) {throw new RuntimeException("cartItemDTOList is empty");}
+        if (cartItemDTOList.isEmpty()) {throw new EmptyCartException("cartItemDTOList is empty");}
         ArrayList<Integer> productIds = new ArrayList<>();
         for (CartItemDTO cartItemDTO : cartItemDTOList) {
             productIds.add(cartItemDTO.getProductId());
@@ -232,7 +235,7 @@ public class OrderServiceImpl implements OrderService {
                 .anyMatch(order -> order.getOrderId() == orderId);
                 
         if (!isOwner) {
-            throw new AccessDeniedException("You are not allowed to access this order");
+            throw new AccessDeniedException("You are not allowed to access order with ID: " + orderId);
         }
     }
 }

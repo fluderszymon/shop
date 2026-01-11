@@ -4,6 +4,7 @@ import com.szymonfluder.shop.dto.ProductCreateDTO;
 import com.szymonfluder.shop.dto.ProductDTO;
 import com.szymonfluder.shop.entity.Product;
 import com.szymonfluder.shop.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class ProductController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Product addProduct(@RequestBody ProductCreateDTO productCreateDTO) {
+    public Product addProduct(@Valid @RequestBody ProductCreateDTO productCreateDTO) {
         return productService.addProduct(productCreateDTO);
     }
 
@@ -47,7 +48,7 @@ public class ProductController {
 
     @PutMapping
     @PreAuthorize("hasAuthority('ADMIN')")
-    public Product updateProduct(@RequestBody Product product) {
+    public Product updateProduct(@Valid @RequestBody Product product) {
         return productService.updateProduct(product);
     }
 }

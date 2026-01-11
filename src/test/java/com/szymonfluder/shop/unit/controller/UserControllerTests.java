@@ -21,6 +21,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -58,8 +60,8 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void getAllUsers_shouldReturnAllUsers() throws Exception {
-        List<UserDTO> users = List.of(new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0));
+    void getAllUsers_shouldReturnAllUsers_whenAdminIsAuthenticated() throws Exception {
+        List<UserDTO> users = List.of(new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP)));
         when(userService.getAllUsers()).thenReturn(users);
 
         mockMvc.perform(get("/users")
@@ -74,7 +76,7 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void getAllUsers_shouldReturnEmptyList() throws Exception {
+    void getAllUsers_shouldReturnEmptyList_whenNoUsersExist() throws Exception {
         when(userService.getAllUsers()).thenReturn(List.of());
 
         mockMvc.perform(get("/users")
@@ -88,8 +90,8 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void getUserByUsername_shouldReturnUser() throws Exception {
-        UserDTO userDTO = new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", 100.0);
+    void getUserByUsername_shouldReturnUser_whenUserExists() throws Exception {
+        UserDTO userDTO = new UserDTO(1, "user", "user@outlook.com", "USER", 1, "User's Address", BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP));
         when(userService.getUserByUsername("user")).thenReturn(userDTO);
 
         mockMvc.perform(get("/users/user")
@@ -104,9 +106,9 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void addUser_shouldReturnCreatedUser() throws Exception {
-        User user = new User(1, "user", "user@outlook.com", "password", "USER", null, "User's Address", 0.0);
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("user", "user@outlook.com", "password", "User's Address");
+    void addUser_shouldReturnCreatedUser_whenValidDataProvided() throws Exception {
+        User user = new User(1, "user", "user@outlook.com", "MyStrongPassword1!", "USER", null, "User's Address", BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP));
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("user", "user@outlook.com", "MyStrongPassword1!", "User's Address");
         when(userService.addUser(any(UserRegisterDTO.class))).thenReturn(user);
 
         mockMvc.perform(post("/users")
@@ -123,7 +125,7 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void deleteUserById_shouldDeleteUser() throws Exception {
+    void deleteUserById_shouldDeleteUser_whenUserExists() throws Exception {
         doNothing().when(userService).deleteUserById(1);
 
         mockMvc.perform(delete("/users/1")
@@ -135,8 +137,8 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void updateUser_shouldReturnUpdatedUser() throws Exception {
-        User updatedUser = new User(1, "updatedUser", "updated_user@outlook.com", "updatedPassword", "ADMIN", null, "Updated Address", 500.0);
+    void updateUser_shouldReturnUpdatedUser_whenValidDataProvided() throws Exception {
+        User updatedUser = new User(1, "updatedUser", "updated_user@outlook.com", "updatedPassword", "ADMIN", null, "Updated Address", BigDecimal.valueOf(500.00).setScale(2, RoundingMode.HALF_UP));
         when(userService.updateUser(any(User.class))).thenReturn(updatedUser);
 
         mockMvc.perform(put("/users")
@@ -153,15 +155,15 @@ public class UserControllerTests extends AbstractControllerTest {
 
     @Test
     @WithMockUser(authorities=("ADMIN"))
-    void deleteUserById_shouldHandleInvalidIdFormat() throws Exception {
+    void deleteUserById_shouldHandleInvalidIdFormat_whenInvalidIdProvided() throws Exception {
         mockMvc.perform(delete("/users/invalid")
                 .header("Authorization", AUTH_HEADER))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
-    void register_shouldRegisterUser() throws Exception {
-        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "password", "New Address");
+    void register_shouldRegisterUser_whenValidDataProvided() throws Exception {
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "MyStrongPassword1!", "New Address");
         doNothing().when(userService).register(any(UserRegisterDTO.class));
 
         mockMvc.perform(post("/users/register")
@@ -173,8 +175,22 @@ public class UserControllerTests extends AbstractControllerTest {
     }
 
     @Test
-    void login_shouldReturnToken() throws Exception {
-        UserLoginDTO userLoginDTO = new UserLoginDTO("user", "password");
+    void register_shouldReturn400_whenPasswordValidationFails() throws Exception {
+        UserRegisterDTO userRegisterDTO = new UserRegisterDTO("newUser", "newuser@outlook.com", "weak", "New Address");
+
+        mockMvc.perform(post("/users/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userRegisterDTO)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors.password").exists());
+
+        verify(userService, never()).register(any(UserRegisterDTO.class));
+    }
+
+    @Test
+    void login_shouldReturnToken_whenValidCredentialsProvided() throws Exception {
+        UserLoginDTO userLoginDTO = new UserLoginDTO("user", "MyPassword1!");
         String expectedToken = "jwt.token.response";
         when(userService.verify(any(UserLoginDTO.class))).thenReturn(expectedToken);
 

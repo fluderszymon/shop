@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class UserMapperTests {
 
     private final String USERNAME = "username";
@@ -21,20 +24,20 @@ public class UserMapperTests {
     private final UserMapper userMapper = new UserMapperImpl();
 
     @Test
-    void userRegisterDTOToUser_shouldMapUserRegisterDTOtoUser() {
+    void userRegisterDTOToUser_shouldMapUserRegisterDTOtoUser_whenValidDataProvided() {
         UserRegisterDTO givenUserRegisterDTO = new UserRegisterDTO(USERNAME, EMAIL, PASSWORD, ADDRESS);
-        User expectedUser = new User(0, USERNAME, EMAIL, PASSWORD, null, null, ADDRESS, 0.00);
+        User expectedUser = new User(0, USERNAME, EMAIL, PASSWORD, null, null, ADDRESS, BigDecimal.valueOf(0.00).setScale(2, RoundingMode.HALF_UP));
         User mappedUser = userMapper.userRegisterDTOToUser(givenUserRegisterDTO);
 
         assertThat(mappedUser).isEqualTo(expectedUser);
     }
 
     @Test
-    void userToUserDTO_shouldMapUserToUserDTO() {
-        User givenUser = new User(1, USERNAME, EMAIL, PASSWORD, "USER", null, ADDRESS, 100.00);
+    void userToUserDTO_shouldMapUserToUserDTO_whenValidDataProvided() {
+        User givenUser = new User(1, USERNAME, EMAIL, PASSWORD, "USER", null, ADDRESS, BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP));
         Cart givenCart = new Cart(1, givenUser, null);
         givenUser.setCart(givenCart);
-        UserDTO expectedUserDTO = new UserDTO(1, USERNAME, EMAIL, "USER", 1, ADDRESS, 100.00);
+        UserDTO expectedUserDTO = new UserDTO(1, USERNAME, EMAIL, "USER", 1, ADDRESS, BigDecimal.valueOf(100.00).setScale(2, RoundingMode.HALF_UP));
         UserDTO mappedUserDTO = userMapper.userToUserDTO(givenUser);
 
         assertThat(mappedUserDTO).isEqualTo(expectedUserDTO);
